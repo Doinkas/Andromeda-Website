@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>window.__andromedaMotionFallback=window.setTimeout(function(){document.documentElement.classList.remove('js-motion');},2500);document.documentElement.classList.add('js-motion');</script>
+  <title>Matches — Andromeda Esports</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header>
+    <nav>
+      <a class="brand-mark" href="../index.html" aria-label="Andromeda Esports home">
+        <img class="brand-mark__logo" src="../images/branding/andro-org.png" alt="Andromeda Esports logo" onerror="this.style.display='none'">
+        <span class="brand-mark__text">Andromeda Esports</span>
+      </a>
+      <a href="teams.html">Teams</a>
+      <a href="schedule.html">Schedule</a>
+      <a href="scrims.html">Matches</a>
+      <a href="merch.html">Merch</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main class="page-main">
+    <section class="section scrims-page section-shell section-band section-band--base" aria-labelledby="scrims-page-heading">
+      <div class="section-inner">
+      <div class="page-header page-header-animate section-head">
+        <p class="section-kicker">Matches</p>
+        <h1 id="scrims-page-heading" class="page-header-item">Matches</h1>
+        <p class="lead page-header-item">Recent official match results across all rosters.</p>
+      </div>
+
+      <div class="section-divider" aria-hidden="true"></div>
+      <div class="section-body">
+
+      <div class="scrims-toolbar">
+        <label for="scrims-team-filter">Filter by team</label>
+        <select id="scrims-team-filter" class="scrims-filter">
+          <option value="">All teams</option>
+          <option value="horizon">Horizon</option>
+          <option value="spiral">Spiral</option>
+          <option value="proxima">Proxima</option>
+          <option value="comet">Comet</option>
+          <option value="supernova">Supernova</option>
+          <option value="void">Void</option>
+          <option value="faceit">Andromeda: FACEIT</option>
+        </select>
+      </div>
+
+      <p id="scrims-page-status" class="muted">Loading matches...</p>
+      <div id="scrims-page-list" class="scrims-page-list"></div>
+      </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner container">
+      <div class="footer-nav">
+        <a href="../index.html">Home</a>
+        <a href="teams.html">Teams</a>
+        <a href="scrims.html">Matches</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="footer-social">
+        <a class="social btn" href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener">Join Discord</a>
+        <a class="social" href="https://twitch.tv/andromeda_esports_" target="_blank" rel="noopener">Twitch</a>
+        <a class="social" href="https://youtube.com/@andromedaesports-n5z1w" target="_blank" rel="noopener">YouTube</a>
+        <a class="social" href="https://www.tiktok.com/@andromeda.esports7" target="_blank" rel="noopener">TikTok</a>
+      </div>
+    </div>
+    <div class="footer-bottom container">
+      <small>© Andromeda Esports</small>
+    </div>
+  </footer>
+
+  <script type="module" src="/js/scrims-page.js"></script>
+  <script src="/js/animations.js" defer></script>
+  <script src="/js/ambient-background.js" defer></script>
+</body>
+</html>

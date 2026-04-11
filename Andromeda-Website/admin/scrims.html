@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Andromeda Admin Match Reports</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Andromeda Admin</h1>
+          <p class="admin-brand__subtitle">Match Submission</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
+        <a href="../pages/admin-tournaments.html" class="admin-btn admin-btn--secondary">Tournament History</a>
+        <a href="matches.html" class="admin-btn admin-btn--secondary">Matches</a>
+        <span>Signed in as <strong data-admin-email>—</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section class="admin-card" aria-labelledby="scrim-form-heading">
+      <h2 id="scrim-form-heading">Submit Match</h2>
+      <form id="scrim-form" class="admin-grid" novalidate>
+        <div>
+          <label class="admin-label" for="scrim-type">Match type</label>
+          <select class="admin-select" id="scrim-type" required>
+            <option value="official">Official</option>
+            <option value="scrim">Scrim (admin/captain only)</option>
+          </select>
+        </div>
+
+        <div class="admin-grid admin-grid--two">
+          <div>
+            <label class="admin-label" for="scrim-team">Team</label>
+            <select class="admin-select" id="scrim-team" required>
+              <option value="">Loading teams...</option>
+            </select>
+          </div>
+          <div>
+            <label class="admin-label" for="scrim-opponent">Opponent</label>
+            <input class="admin-input" id="scrim-opponent" type="text" placeholder="Opponent name" required>
+          </div>
+        </div>
+
+        <div class="admin-grid admin-grid--two">
+          <div>
+            <label class="admin-label" for="scrim-replay-code">Replay code</label>
+            <input class="admin-input" id="scrim-replay-code" type="text" placeholder="ABCD-1234" required>
+          </div>
+          <div>
+            <label class="admin-label" for="scrim-result">Result</label>
+            <select class="admin-select" id="scrim-result" required>
+              <option value="">Select result</option>
+              <option value="W">Win</option>
+              <option value="L">Loss</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="admin-grid admin-grid--two">
+          <div>
+            <label class="admin-label" for="scrim-score-for">Map score (for)</label>
+            <input class="admin-input" id="scrim-score-for" type="number" min="0" step="1" placeholder="2">
+          </div>
+          <div>
+            <label class="admin-label" for="scrim-score-against">Map score (against)</label>
+            <input class="admin-input" id="scrim-score-against" type="number" min="0" step="1" placeholder="1">
+          </div>
+        </div>
+
+        <div>
+          <label class="admin-label" for="scrim-maps">Maps played (comma separated)</label>
+          <input class="admin-input" id="scrim-maps" type="text" placeholder="Ascent, Bind, Haven">
+        </div>
+
+        <div>
+          <label class="admin-label" for="scrim-notes">Notes (optional)</label>
+          <textarea class="admin-textarea" id="scrim-notes" rows="4" placeholder="Short scrim summary"></textarea>
+        </div>
+
+        <div>
+          <label class="admin-label" for="scrim-stats">Stats JSON (optional)</label>
+          <textarea class="admin-textarea" id="scrim-stats" rows="4" placeholder='{"kills": 82, "firstBloods": 7}'></textarea>
+        </div>
+
+        <div>
+          <label class="admin-label" for="scrim-screenshots">Screenshots (png/jpg/jpeg/webp, max 5MB each)</label>
+          <input class="admin-input" id="scrim-screenshots" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" multiple>
+        </div>
+
+        <div class="admin-inline-actions">
+          <button id="scrim-submit-btn" class="admin-btn admin-btn--primary" type="submit">Submit Match</button>
+          <button id="scrim-reset-btn" class="admin-btn admin-btn--secondary" type="button">Clear</button>
+        </div>
+
+        <p id="scrim-form-status" class="admin-status admin-text-muted" role="status" aria-live="polite">Ready to submit.</p>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="js/scrims.js"></script>
+</body>
+</html>

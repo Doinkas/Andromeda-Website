@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Andromeda Admin Dashboard</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Andromeda Admin</h1>
+          <p class="admin-brand__subtitle">Control center</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <span>Signed in as <strong data-admin-email>—</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section class="admin-card">
+      <h2>Dashboard</h2>
+      <p>Use the tools below to manage teams, matches, and admin maintenance workflows.</p>
+      <div class="admin-grid admin-grid--cards">
+        <a class="admin-link-card" href="matches.html">
+          <span class="admin-link-card__title">Matches</span>
+          <span class="admin-link-card__meta">Create, edit, and view upcoming matches</span>
+        </a>
+        <a class="admin-link-card" href="../pages/admin-matches.html">
+          <span class="admin-link-card__title">Match Reports Viewer</span>
+          <span class="admin-link-card__meta">View official and scrim reports with filters and details</span>
+        </a>
+        <a class="admin-link-card" href="../pages/admin-tournaments.html">
+          <span class="admin-link-card__title">Tournament History</span>
+          <span class="admin-link-card__meta">Create, edit, publish, and remove tournament records</span>
+        </a>
+        <a class="admin-link-card" href="scrims.html">
+          <span class="admin-link-card__title">Match Reports</span>
+          <span class="admin-link-card__meta">Submit official or scrim results with replay codes, stats, and screenshots</span>
+        </a>
+        <a class="admin-link-card" href="admin.html">
+          <span class="admin-link-card__title">Rosters + Trials</span>
+          <span class="admin-link-card__meta">Edit team rosters and process trial queue</span>
+        </a>
+        <a class="admin-link-card" href="profiles-import.html">
+          <span class="admin-link-card__title">Import Player Profiles</span>
+          <span class="admin-link-card__meta">Upload CSV to add player bios, heroes, and socials</span>
+        </a>
+        <a class="admin-link-card" href="import-schedule.html">
+          <span class="admin-link-card__title">Import Schedule</span>
+          <span class="admin-link-card__meta">Parse schedule HTML and seed Firestore matches</span>
+        </a>
+        <a class="admin-link-card" href="seed-rosters.html">
+          <span class="admin-link-card__title">Seed Rosters</span>
+          <span class="admin-link-card__meta">Sync roster HTML into Firestore documents</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+</body>
+</html>

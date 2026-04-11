@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Player Profiles</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Andromeda Admin</h1>
+          <p class="admin-brand__subtitle">Import Player Profiles</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
+        <a href="admin.html" class="admin-btn admin-btn--secondary">Rosters</a>
+        <span>Signed in as <strong data-admin-email>—</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section class="admin-grid">
+      <article class="admin-card" aria-labelledby="import-heading">
+        <h2 id="import-heading">Import Player Profiles from CSV</h2>
+
+        <p class="admin-text-muted">CSV must include columns: <code>teamId</code>, <code>ign</code>, and optionally: <code>bio</code>, <code>mains</code>, <code>strength</code>, <code>teamValue</code>, <code>favoriteHero</code>, <code>favoriteMap</code>, <code>funFact</code>, <code>twitch</code>, <code>twitter</code>, <code>youtube</code></p>
+
+        <div>
+          <label class="admin-label" for="csv-input">Paste or Upload CSV</label>
+          <textarea id="csv-input" class="admin-textarea" rows="10" placeholder="teamId,ign,bio,mains,..."></textarea>
+        </div>
+
+        <div class="admin-inline-actions">
+          <button id="parse-btn" class="admin-btn admin-btn--secondary" type="button">Parse CSV</button>
+          <button id="upload-file-btn" class="admin-btn admin-btn--secondary" type="button">Upload File</button>
+        </div>
+
+        <input type="file" id="csv-file" hidden accept=".csv" />
+
+        <p id="parse-status" class="admin-status admin-text-muted" role="status" aria-live="polite"></p>
+
+        <div id="preview-section" style="display: none; margin-top: 20px;">
+          <h3>Preview Changes</h3>
+
+          <div class="admin-grid" style="margin-bottom: 14px;">
+            <div>
+              <strong>Total Records:</strong>
+              <span id="preview-total">0</span>
+            </div>
+            <div>
+              <strong>Will Update:</strong>
+              <span id="preview-ok">0</span>
+            </div>
+            <div>
+              <strong>Warnings:</strong>
+              <span id="preview-warnings">0</span>
+            </div>
+            <div>
+              <strong>Errors:</strong>
+              <span id="preview-errors">0</span>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Team</th>
+                  <th>IGN</th>
+                  <th>Status</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody id="preview-table-body"></tbody>
+            </table>
+          </div>
+
+          <div class="admin-inline-actions" style="margin-top: 14px;">
+            <button id="apply-btn" class="admin-btn admin-btn--primary" type="button">Apply Changes</button>
+            <button id="cancel-btn" class="admin-btn admin-btn--secondary" type="button">Cancel</button>
+          </div>
+        </div>
+
+        <div id="results-section" style="display: none; margin-top: 20px;">
+          <h3>Import Results</h3>
+
+          <div class="admin-grid" style="margin-bottom: 14px;">
+            <div>
+              <strong>Successful:</strong>
+              <span id="results-success">0</span>
+            </div>
+            <div>
+              <strong>Failed:</strong>
+              <span id="results-failed">0</span>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Team</th>
+                  <th>Status</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody id="results-table-body"></tbody>
+            </table>
+          </div>
+
+          <div class="admin-inline-actions" style="margin-top: 14px;">
+            <button id="reset-btn" class="admin-btn admin-btn--secondary" type="button">Import Another</button>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="js/profiles-import.js"></script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>window.__andromedaMotionFallback=window.setTimeout(function(){document.documentElement.classList.remove('js-motion');},2500);document.documentElement.classList.add('js-motion');</script>
+  <title>Andromeda Esports</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- HEADER: top of the page -->
+  <header>
+    <nav>
+      <a class="brand-mark" href="index.html" aria-label="Andromeda Esports home">
+        <img class="brand-mark__logo" src="images/branding/andro-org.png" alt="Andromeda Esports logo" onerror="this.style.display='none'">
+        <span class="brand-mark__text">Andromeda Esports</span>
+      </a>
+      <a href="pages/teams.html">Teams</a>
+      <a href="pages/schedule.html">Schedule</a>
+      <a href="pages/scrims.html">Matches</a>
+      <a href="pages/merch.html">Merch</a>
+      <a href="pages/contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <!-- HERO SECTION: main banner -->
+  <main>
+    <section id="hero" class="section section-band section-band--hero" aria-labelledby="hero-title">
+      <div class="hero-orbit" aria-hidden="true"></div>
+      <img src="images/branding/andro-org.png" alt="" class="hero-orbit-logo" aria-hidden="true" onerror="this.style.display='none'">
+      <div class="hero-inner">
+        <div class="hero-main">
+          <p class="hero-kicker">Andromeda Esports</p>
+          <h1 id="hero-title">Built for competition. Backed by community.</h1>
+          <p class="tagline">A development-first esports organization creating a clear path from emerging talent to premier play.</p>
+          <p class="hero-mission">From structured practice to match-day execution, our teams grow through accountability, coaching, and consistent standards.</p>
+          <div class="hero-ctas">
+            <a class="btn primary" href="pages/teams.html">Explore Teams</a>
+            <a class="btn" href="pages/schedule.html">View Schedule</a>
+            <a class="btn" href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener">Join Discord</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="path" class="dev-path container section section-shell section-band section-band--base">
+      <div class="section-inner">
+      <header class="dev-path__header section-head">
+        <p class="section-kicker">Development</p>
+        <h2>The Andromeda Development Path</h2>
+        <p class="lead">A layered system built for growth, clarity, and measurable progression across every roster.</p>
+      </header>
+      <div class="section-divider" aria-hidden="true"></div>
+      <div class="section-body">
+      <div class="dev-carousel" data-module="devpath-carousel" aria-label="Development Path Carousel">
+        <div class="dev-carousel__viewport" tabindex="0">
+          <div class="dev-carousel__track" data-dev-carousel-track>
+            <article class="dev-card theme--horizon dev-slide dev-slide--banner">
+              <div class="dev-slide__content">
+                <p class="muted">T1 • Foundation</p>
+                <h3>Horizon</h3>
+                <p>Entry roster focused on mastering fundamentals and clean team structure.</p>
+                <ul>
+                  <li>Communication habits</li>
+                  <li>Role fundamentals</li>
+                  <li>Structured review cycles</li>
+                </ul>
+              </div>
+              <aside class="dev-slide__visual" aria-hidden="true">
+                <img src="images/teams/logos/andro-horizon.png" alt="">
+              </aside>
+            </article>
+
+            <article class="dev-card theme--spiral dev-slide dev-slide--banner">
+              <div class="dev-slide__content">
+                <p class="muted">T2 • Development</p>
+                <h3>Spiral</h3>
+                <p>Development roster centered on consistency, discipline, and role ownership.</p>
+                <ul>
+                  <li>Execution discipline</li>
+                  <li>Role mastery</li>
+                  <li>Pressure communication</li>
+                </ul>
+              </div>
+              <aside class="dev-slide__visual" aria-hidden="true">
+                <img src="images/teams/logos/andro-spiral.png" alt="">
+              </aside>
+            </article>
+
+            <article class="dev-card theme--proxima dev-slide dev-slide--banner">
+              <div class="dev-slide__content">
+                <p class="muted">T3 • Advanced</p>
+                <h3>Proxima</h3>
+                <p>Advanced roster built for tactical polish and high-pressure performance.</p>
+                <ul>
+                  <li>Tactical refinement</li>
+                  <li>Composure under pressure</li>
+                  <li>Series adaptation</li>
+                </ul>
+              </div>
+              <aside class="dev-slide__visual" aria-hidden="true">
+                <img src="images/teams/logos/andro-proxima.png" alt="">
+              </aside>
+            </article>
+
+            <article class="dev-card dev-card--premier theme--faceit dev-slide dev-slide--banner">
+              <div class="dev-slide__content">
+                <p class="muted">FACEIT • Premier</p>
+                <h3>Andromeda: FACEIT</h3>
+                <p>Premier roster setting the competitive benchmark for the full development path.</p>
+                <ul>
+                  <li>Match-day excellence</li>
+                  <li>Elite consistency</li>
+                  <li>Org-wide leadership</li>
+                </ul>
+              </div>
+              <aside class="dev-slide__visual" aria-hidden="true">
+                <img src="images/teams/logos/octantis-logo.png" alt="">
+              </aside>
+            </article>
+          </div>
+        </div>
+
+        <div class="dev-carousel__controls" aria-label="Development Path controls">
+          <button type="button" class="btn btn--secondary" data-dev-carousel-prev>Prev</button>
+          <div class="dev-carousel__timeline" role="tablist" aria-label="Select stage">
+            <button type="button" class="dev-step is-active" data-dev-carousel-dot="0" aria-label="Show Horizon">T1 Horizon</button>
+            <button type="button" class="dev-step" data-dev-carousel-dot="1" aria-label="Show Spiral">T2 Spiral</button>
+            <button type="button" class="dev-step" data-dev-carousel-dot="2" aria-label="Show Proxima">T3 Proxima</button>
+            <button type="button" class="dev-step" data-dev-carousel-dot="3" aria-label="Show Andromeda FACEIT">FACEIT</button>
+          </div>
+          <button type="button" class="btn btn--secondary" data-dev-carousel-next>Next</button>
+        </div>
+      </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ABOUT / MISSION -->
+    <section id="about" class="container section section-shell section-band section-band--alt">
+      <div class="section-inner">
+      <div class="section-head">
+        <p class="section-kicker">Overview</p>
+        <h2>About Andromeda</h2>
+        <p class="lead">We are a community-driven esports organization focused on fair play, player development, and building a welcoming competitive scene.</p>
+      </div>
+      <div class="section-divider" aria-hidden="true"></div>
+      <div class="section-body">
+        <p>Whether you're looking to join a team or follow our tournaments, Andromeda provides a space for players and fans to grow together.</p>
+      </div>
+      </div>
+    </section>
+    <!-- Contact section removed (moved to contact.html) -->
+
+    <section id="tournament-history" class="container section section-shell section-band section-band--elevated" aria-labelledby="tournament-history-heading" data-module="home-tournaments">
+      <div class="section-inner">
+      <div class="section-head">
+        <p class="section-kicker">Results</p>
+        <h2 id="tournament-history-heading">Tournament History</h2>
+        <p class="lead">Published results across official events and league runs.</p>
+      </div>
+      <div class="section-divider" aria-hidden="true"></div>
+      <div class="section-body">
+
+      <div class="tournament-totals">
+        <article class="card tournament-total-item">
+          <p class="muted">Tournaments</p>
+          <p class="tournament-total-value" data-total-tournaments>0</p>
+        </article>
+        <article class="card tournament-total-item">
+          <p class="muted">Combined Record</p>
+          <p class="tournament-total-value" data-total-record>0W-0L</p>
+        </article>
+        <article class="card tournament-total-item">
+          <p class="muted">Achievements</p>
+          <p class="tournament-total-value" data-total-achievements>0</p>
+        </article>
+      </div>
+
+      <p class="muted" data-home-tournament-status>Loading tournaments...</p>
+      <div class="tournaments-grid" data-home-tournament-list></div>
+
+      <p><a class="btn" href="pages/tournaments.html">View all tournaments</a></p>
+      </div>
+      </div>
+    </section>
+
+    <section id="activity" class="container section section-shell section-band section-band--base" aria-labelledby="activity-heading">
+      <div class="section-inner">
+      <div class="section-head">
+        <p class="section-kicker">Live Feed</p>
+        <h2 id="activity-heading">Recent Activity</h2>
+        <p class="lead">Latest official match results and updates across Andromeda.</p>
+      </div>
+      <div class="section-divider" aria-hidden="true"></div>
+      <div class="section-body">
+      <div class="activity-strip" data-module="recent-activity">
+        <div class="activity-column">
+          <h3>Latest Matches</h3>
+          <ul class="activity-list" data-activity-scrims>
+            <li class="muted">Loading matches...</li>
+          </ul>
+        </div>
+        <div class="activity-column">
+          <h3>Latest News</h3>
+          <ul class="activity-list" data-activity-news>
+            <li class="muted">Loading news...</li>
+          </ul>
+        </div>
+      </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- LATEST NEWS (tabs) -->
+    <section id="news" class="container section section-shell section-band section-band--alt">
+      <div class="section-inner">
+      <div class="section-head">
+        <p class="section-kicker">Editorial</p>
+        <h2>Latest News</h2>
+        <p class="lead">Updates, announcements, and match recaps.</p>
+      </div>
+      <div class="section-divider" aria-hidden="true"></div>
+      <div class="section-body">
+
+      <div class="news-tabs" data-module="news-tabs">
+        <div class="news-tabs-nav">
+          <button class="tab active" data-target="news-list">News</button>
+          <button class="tab" data-target="updates-list">Updates</button>
+          <button class="tab" data-target="media-list">Media</button>
+        </div>
+
+        <div class="news-tabs-panels">
+          <div id="news-list" class="panel active">
+            <article class="news-item">
+              <h3>Andromeda Horizon qualify for Nebula Series</h3>
+              <p class="muted">Feb 15, 2026 — Our Horizon roster secured a spot in the upcoming Nebula Series.</p>
+              <p>Full recap and match VODs will be posted to our <a href="#">YouTube</a> and <a href="#">Twitch</a> channels.</p>
+            </article>
+            <article class="news-item">
+              <h3>Open Tryouts — VALORANT</h3>
+              <p class="muted">Feb 10, 2026 — We're holding open tryouts for our development squad.</p>
+              <p>Signups are available via the <a href="pages/contact.html">Contact</a> page.</p>
+            </article>
+          </div>
+
+          <div id="updates-list" class="panel">
+            <ul>
+              <li>Roster updates will be posted after each transfer window.</li>
+              <li>Merch drop planned for Q2 — subscribe for updates.</li>
+            </ul>
+          </div>
+
+          <div id="media-list" class="panel">
+            <p>Recent highlights and clips will appear here. Follow our <a href="#">Twitch</a> for live matches.</p>
+          </div>
+        </div>
+      </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- Schedule moved to schedule.html -->
+  </main>
+
+  <!-- FOOTER: bottom of the page -->
+  <footer>
+    <div class="footer-inner container">
+      <div class="footer-nav">
+        <a href="index.html">Home</a>
+        <a href="pages/teams.html">Teams</a>
+        <a href="pages/contact.html">Contact</a>
+      </div>
+      <div class="footer-social">
+        <a class="social btn" href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener">Join Discord</a>
+        <a class="social" href="https://twitch.tv/andromeda_esports_" target="_blank" rel="noopener">Twitch</a>
+        <a class="social" href="https://youtube.com/@andromedaesports-n5z1w" target="_blank" rel="noopener">YouTube</a>
+        <a class="social" href="https://www.tiktok.com/@andromeda.esports7" target="_blank" rel="noopener">TikTok</a>
+      </div>
+    </div>
+    <div class="footer-bottom container">
+      <small>© Andromeda Esports</small>
+    </div>
+  </footer>
+
+  <script src="js/news.js"></script>
+  <script type="module" src="js/home-activity.js"></script>
+  <script type="module" src="js/home-tournaments.js"></script>
+  <script type="module" src="js/pages/home-devpath-carousel.js"></script>
+  <script src="/js/animations.js" defer></script>
+  <script src="/js/ambient-background.js" defer></script>
+</body>
+</html>

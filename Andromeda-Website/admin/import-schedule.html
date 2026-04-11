@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Andromeda Admin Import Schedule</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Andromeda Admin</h1>
+          <p class="admin-brand__subtitle">Import Schedule</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
+        <span>Signed in as <strong data-admin-email>—</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section class="admin-card" style="max-width: 860px;">
+      <h2>Import from schedule.html</h2>
+      <p>Parse pages/schedule.html and upsert matches into Firestore.</p>
+
+      <div style="max-width: 220px;">
+        <label class="admin-label" for="year-input">Year</label>
+        <input class="admin-input" type="number" id="year-input" value="2026" min="2020" max="2035">
+      </div>
+
+      <div class="admin-inline-actions" style="margin-top: 12px;">
+        <button id="import-btn" class="admin-btn admin-btn--primary" type="button">Import Schedule</button>
+      </div>
+
+      <pre id="log-output" class="admin-card" style="display:none; margin-top:14px; max-height:450px; overflow:auto; white-space:pre-wrap;"></pre>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="js/import-schedule.js"></script>
+</body>
+</html>

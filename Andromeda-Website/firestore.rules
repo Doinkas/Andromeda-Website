@@ -1,0 +1,223 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdminEmail() {
+      let allowlistDoc = get(/databases/$(database)/documents/config/adminAllowlist);
+      return request.auth != null
+        && request.auth.token.email is string
+        && allowlistDoc.data != null
+        && allowlistDoc.data.emails != null
+        && allowlistDoc.data.emails[request.auth.token.email] == true;
+    }
+
+    function isCaptainClaim() {
+      return request.auth != null
+        && (
+          request.auth.token.captain == true
+          || (request.auth.token.role is string
+            && (request.auth.token.role == 'captain' || request.auth.token.role == 'admin'))
+        );
+    }
+
+    function isAdminOrCaptain() {
+      return isAdminEmail() || isCaptainClaim();
+    }
+
+    function isString(x) { return x is string; }
+    function isList(x) { return x is list; }
+    function isOptionalString(x, maxLen) { return !(x is string) || x.size() <= maxLen; }
+    function isOptionalNumber(x) { return !(x is int || x is float); }
+
+    function isValidScrimCreate() {
+      return request.resource.data.keys().hasAll([
+          'type', 'teamId', 'opponentName', 'replayCode', 'result', 'createdAt', 'createdByUid', 'createdByEmail'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'type', 'teamId', 'teamName', 'opponentName', 'replayCode', 'result',
+          'mapScoreFor', 'mapScoreAgainst', 'mapsPlayed', 'notes', 'stats',
+          'createdAt', 'createdByUid', 'createdByEmail', 'screenshotUrls'
+        ])
+        && request.resource.data.type in ['scrim', 'official']
+        && request.resource.data.teamId is string
+        && request.resource.data.teamId.size() > 0
+        && request.resource.data.teamId.size() <= 40
+        && (!('teamName' in request.resource.data)
+          || (request.resource.data.teamName is string && request.resource.data.teamName.size() > 0 && request.resource.data.teamName.size() <= 80))
+        && request.resource.data.opponentName is string
+        && request.resource.data.opponentName.size() > 0
+        && request.resource.data.opponentName.size() <= 80
+        && request.resource.data.replayCode is string
+        && request.resource.data.replayCode.size() > 0
+        && request.resource.data.replayCode.size() <= 80
+        && request.resource.data.result in ['W', 'L']
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdByUid is string
+        && request.resource.data.createdByUid.size() > 0
+        && request.resource.data.createdByUid.size() <= 128
+        && request.resource.data.createdByEmail is string
+        && request.resource.data.createdByEmail.size() > 0
+        && request.resource.data.createdByEmail.size() <= 254
+        && (!('mapScoreFor' in request.resource.data)
+          || (request.resource.data.mapScoreFor is int || request.resource.data.mapScoreFor is float))
+        && (!('mapScoreAgainst' in request.resource.data)
+          || (request.resource.data.mapScoreAgainst is int || request.resource.data.mapScoreAgainst is float))
+        && (!('mapsPlayed' in request.resource.data)
+          || (request.resource.data.mapsPlayed is list
+            && request.resource.data.mapsPlayed.size() <= 8
+            && request.resource.data.mapsPlayed.all(m => m is string && m.size() > 0 && m.size() <= 40)))
+        && (!('notes' in request.resource.data)
+          || (request.resource.data.notes is string && request.resource.data.notes.size() <= 2500))
+        && (!('stats' in request.resource.data)
+          || request.resource.data.stats is map)
+        && (!('screenshotUrls' in request.resource.data)
+          || (request.resource.data.screenshotUrls is list
+            && request.resource.data.screenshotUrls.size() <= 8
+            && request.resource.data.screenshotUrls.all(u => u is string && u.size() > 0 && u.size() <= 600)));
+    }
+
+    function isValidScheduledMatchCreate() {
+      return request.resource.data.keys().hasAll(['teamId', 'opponent', 'scheduledAt'])
+        && request.resource.data.keys().hasOnly([
+          'type', 'teamId', 'opponent', 'opponentName', 'streamUrl', 'scheduledAt', 'source', 'createdAt', 'updatedAt', 'lastModifiedBy'
+        ])
+        && (!('type' in request.resource.data) || request.resource.data.type in ['official', 'scrim'])
+        && request.resource.data.teamId is string
+        && request.resource.data.teamId.size() > 0
+        && request.resource.data.teamId.size() <= 40
+        && request.resource.data.opponent is string
+        && request.resource.data.opponent.size() > 0
+        && request.resource.data.opponent.size() <= 100
+        && request.resource.data.scheduledAt is timestamp
+        && (!('streamUrl' in request.resource.data) || request.resource.data.streamUrl == null || request.resource.data.streamUrl is string)
+        && (!('source' in request.resource.data) || request.resource.data.source == null || request.resource.data.source is string)
+        && (!('createdAt' in request.resource.data) || request.resource.data.createdAt is timestamp)
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp)
+        && (!('lastModifiedBy' in request.resource.data) || request.resource.data.lastModifiedBy == null || request.resource.data.lastModifiedBy is string);
+    }
+
+    function isValidProfile(profile) {
+      return profile is map
+        && (!("bio" in profile) || profile.bio is string && profile.bio.size() <= 200)
+        && (!("mains" in profile) || profile.mains is list && profile.mains.size() <= 6)
+        && (!("strength" in profile) || profile.strength is string && profile.strength.size() <= 100)
+        && (!("teamValue" in profile) || profile.teamValue is string && profile.teamValue.size() <= 100)
+        && (!("favoriteHero" in profile) || profile.favoriteHero is string && profile.favoriteHero.size() <= 25)
+        && (!("favoriteMap" in profile) || profile.favoriteMap is string && profile.favoriteMap.size() <= 25)
+        && (!("funFact" in profile) || profile.funFact is string && profile.funFact.size() <= 80)
+        && (!("socials" in profile) || profile.socials is map);
+    }
+
+    function isValidPlayer(player) {
+      return player is map
+        && isString(player.name)
+        && player.name.size() > 0
+        && (!("roles" in player) || player.roles is list)
+        && (!("lineup" in player) || player.lineup in ['starter', 'sub'])
+        && (!("profile" in player) || isValidProfile(player.profile));
+    }
+
+    function isValidTournamentData() {
+      return request.resource.data.keys().hasAll([
+          'name', 'game', 'startDate', 'isPublished', 'record', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.game is string
+        && request.resource.data.game.size() > 0
+        && request.resource.data.startDate is timestamp
+        && request.resource.data.isPublished is bool
+        && request.resource.data.record is map
+        && (request.resource.data.record.wins is int || request.resource.data.record.wins is float)
+        && (request.resource.data.record.losses is int || request.resource.data.record.losses is float)
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && (!('endDate' in request.resource.data) || request.resource.data.endDate is timestamp)
+        && (!('placementText' in request.resource.data) || request.resource.data.placementText is string)
+        && (!('achievements' in request.resource.data)
+          || (request.resource.data.achievements is list
+            && request.resource.data.achievements.all(item => item is string)))
+        && (!('highlights' in request.resource.data)
+          || (request.resource.data.highlights is list
+            && request.resource.data.highlights.all(item => item is string)))
+        && (!('link' in request.resource.data) || request.resource.data.link is string);
+    }
+
+    // ---- Config: Admin allowlist management ----
+    // SECURITY: Only allowlisted admins can read/write the allowlist
+    match /config/adminAllowlist {
+      allow read: if isAdminEmail();
+      allow update, create: if isAdminEmail() && request.resource.data.emails is map;
+      allow delete: if false;
+    }
+
+    // ---- Public site data: readable by anyone, writable by admins ----
+    match /teams/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdminEmail();
+    }
+
+    match /players/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdminEmail();
+    }
+
+    match /matches/{id} {
+      allow read: if resource.data.type == 'official' || isAdminOrCaptain();
+      allow create: if isAdminOrCaptain()
+        && (isValidScrimCreate() || isValidScheduledMatchCreate());
+      allow update: if isAdminEmail();
+      allow delete: if isAdminEmail();
+    }
+
+    match /seasons/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdminEmail();
+    }
+
+    match /news/{id} {
+      allow read: if true;
+      allow create, update: if isAdminEmail()
+        && isString(request.resource.data.title)
+        && isString(request.resource.data.content);
+      allow delete: if isAdminEmail();
+    }
+
+    match /tournaments/{tournamentId} {
+      allow read: if (resource.data.isPublished == true) || isAdminEmail();
+      allow create, update: if isAdminEmail() && isValidTournamentData();
+      allow delete: if isAdminEmail();
+    }
+
+    // ---- Rosters ----
+    match /rosters/{teamId} {
+      allow read: if true;
+
+      allow create, update: if isAdminEmail()
+        && request.resource.data.players is list
+        && request.resource.data.players.size() > 0
+        && request.resource.data.players.all(p => isValidPlayer(p));
+
+      allow delete: if isAdminEmail();
+    }
+
+    // ---- Trials ----
+    match /trials/{trialId} {
+      allow read: if isAdminEmail();
+
+      allow create, update, delete: if isAdminEmail();
+    }
+
+    // ---- Audit Logs ----
+    match /auditLogs/{logId} {
+      allow read: if isAdminEmail();
+      allow create: if isAdminOrCaptain();
+      allow update, delete: if isAdminEmail();
+    }
+
+    // ---- Default deny ----
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>window.__andromedaMotionFallback=window.setTimeout(function(){document.documentElement.classList.remove('js-motion');},2500);document.documentElement.classList.add('js-motion');</script>
+  <title>Tournament History — Andromeda Esports</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a class="brand-mark" href="../index.html" aria-label="Andromeda Esports home">
+        <img class="brand-mark__logo" src="../images/branding/andro-org.png" alt="Andromeda Esports logo" onerror="this.style.display='none'">
+        <span class="brand-mark__text">Andromeda Esports</span>
+      </a>
+      <a href="teams.html">Teams</a>
+      <a href="schedule.html">Schedule</a>
+      <a href="scrims.html">Matches</a>
+      <a href="merch.html">Merch</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main class="page-main">
+    <section class="section section-shell section-band section-band--elevated" aria-labelledby="tournaments-heading">
+      <div class="section-inner">
+      <div class="page-header page-header-animate section-head">
+        <p class="section-kicker">History</p>
+        <h1 id="tournaments-heading" class="page-header-item">Tournament History</h1>
+        <p class="lead page-header-item">Published tournament results and milestone achievements.</p>
+      </div>
+
+      <div class="section-divider" aria-hidden="true"></div>
+      <div class="section-body">
+
+      <div class="tournament-totals">
+        <article class="card tournament-total-item">
+          <p class="muted">Tournaments</p>
+          <p class="tournament-total-value" data-total-tournaments>0</p>
+        </article>
+        <article class="card tournament-total-item">
+          <p class="muted">Combined Record</p>
+          <p class="tournament-total-value" data-total-record>0W-0L</p>
+        </article>
+        <article class="card tournament-total-item">
+          <p class="muted">Achievements</p>
+          <p class="tournament-total-value" data-total-achievements>0</p>
+        </article>
+      </div>
+
+      <div class="scrims-toolbar">
+        <label for="tournaments-game-filter">Filter by game</label>
+        <select id="tournaments-game-filter" class="scrims-filter">
+          <option value="">All games</option>
+        </select>
+      </div>
+
+      <p id="tournaments-status" class="muted">Loading tournaments...</p>
+      <div id="tournaments-list" class="tournaments-grid"></div>
+      </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner container">
+      <div class="footer-nav">
+        <a href="../index.html">Home</a>
+        <a href="teams.html">Teams</a>
+        <a href="scrims.html">Matches</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="footer-social">
+        <a class="social btn" href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener">Join Discord</a>
+        <a class="social" href="https://twitch.tv/andromeda_esports_" target="_blank" rel="noopener">Twitch</a>
+        <a class="social" href="https://youtube.com/@andromedaesports-n5z1w" target="_blank" rel="noopener">YouTube</a>
+        <a class="social" href="https://www.tiktok.com/@andromeda.esports7" target="_blank" rel="noopener">TikTok</a>
+      </div>
+    </div>
+    <div class="footer-bottom container">
+      <small>© Andromeda Esports</small>
+    </div>
+  </footer>
+
+  <script type="module" src="/js/tournaments-page.js"></script>
+  <script src="/js/animations.js" defer></script>
+  <script src="/js/ambient-background.js" defer></script>
+</body>
+</html>
