@@ -11,4 +11,3 @@
 - `js/admin/` - shared admin auth/gating helpers.
 - `images/` - current public image assets.
 - `tools/` - local validation scripts.
-- `firestore.rules` and `storage.rules` - Firebase rules copied into Firebase manually.
