@@ -1,12 +1,9 @@
 # Andromeda Esports Website
 
 > **Student Learning Project**
-> I am currently a college student and new to web development. This is my first project, and I am building it while learning along the way. I do not have professional experience in this field yet, so some parts of the code may not 
-follow professional or production-level best practices.
-
-## About the Project
-This repository contains a website for Andromeda Esports. Its purpose is to provide a central place for visitors to explore teams, rosters, schedules, match results, tournaments, organization information, and community links.
-The project also includes an administrative area for managing website content with Firebase.
+A web platform under active development for Andromeda Esports, built to manage and present teams, rosters, schedules, match results, tournaments, organization information, and community content.
+The project uses HTML, CSS, JavaScript, Firebase Authentication, Cloud Firestore, and Firebase Storage. It also includes an administrative interface for managing site content and organization data.
+This project began as my first large-scale web development project and continues to evolve as I build my skills in JavaScript, databases, application structure, authentication, validation, and version control.
 
 ## What I Am Learning
 I created this project to gain hands-on experience with:
