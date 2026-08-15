@@ -18,47 +18,103 @@
         </div>
       </div>
       <div class="admin-user">
-        <span>Signed in as <strong data-admin-email>—</strong></span>
+        <span class="admin-role-badge" data-admin-role>-</span>
+        <span>Signed in as <strong data-admin-email>-</strong></span>
         <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
       </div>
     </header>
 
     <section class="admin-card">
       <h2>Dashboard</h2>
+      <p class="admin-page-purpose">Start here to reach the admin tools your role can use. Cards that do not apply to your role are hidden automatically.</p>
       <p>Use the tools below to manage teams, matches, and admin maintenance workflows.</p>
-      <div class="admin-grid admin-grid--cards">
-        <a class="admin-link-card" href="matches.html">
-          <span class="admin-link-card__title">Matches</span>
-          <span class="admin-link-card__meta">Create, edit, and view upcoming matches</span>
-        </a>
-        <a class="admin-link-card" href="../pages/admin-matches.html">
-          <span class="admin-link-card__title">Match Reports Viewer</span>
-          <span class="admin-link-card__meta">View official and scrim reports with filters and details</span>
-        </a>
-        <a class="admin-link-card" href="../pages/admin-tournaments.html">
-          <span class="admin-link-card__title">Tournament History</span>
-          <span class="admin-link-card__meta">Create, edit, publish, and remove tournament records</span>
-        </a>
-        <a class="admin-link-card" href="scrims.html">
-          <span class="admin-link-card__title">Match Reports</span>
-          <span class="admin-link-card__meta">Submit official or scrim results with replay codes, stats, and screenshots</span>
-        </a>
-        <a class="admin-link-card" href="admin.html">
-          <span class="admin-link-card__title">Rosters + Trials</span>
-          <span class="admin-link-card__meta">Edit team rosters and process trial queue</span>
-        </a>
-        <a class="admin-link-card" href="profiles-import.html">
-          <span class="admin-link-card__title">Import Player Profiles</span>
-          <span class="admin-link-card__meta">Upload CSV to add player bios, heroes, and socials</span>
-        </a>
-        <a class="admin-link-card" href="import-schedule.html">
-          <span class="admin-link-card__title">Import Schedule</span>
-          <span class="admin-link-card__meta">Parse schedule HTML and seed Firestore matches</span>
-        </a>
-        <a class="admin-link-card" href="seed-rosters.html">
-          <span class="admin-link-card__title">Seed Rosters</span>
-          <span class="admin-link-card__meta">Sync roster HTML into Firestore documents</span>
-        </a>
+
+      <div class="admin-dashboard-section">
+        <h3 class="admin-dashboard-section__heading">Match Ops</h3>
+        <div class="admin-grid admin-grid--cards">
+          <a class="admin-link-card admin-link-card--primary" href="calendar.html" data-admin-visible="admin,captain">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Match Calendar</span>
+              <span class="admin-link-card__access">Captains allowed</span>
+            </span>
+            <span class="admin-link-card__meta">Schedule, import, edit, and complete official matches from one workspace.</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="admin-dashboard-section">
+        <h3 class="admin-dashboard-section__heading">Team Ops</h3>
+        <div class="admin-grid admin-grid--cards">
+          <a class="admin-link-card" href="admin.html" data-admin-visible="admin">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Rosters + Trials</span>
+              <span class="admin-link-card__access">Admin only</span>
+            </span>
+            <span class="admin-link-card__meta">Edit public rosters, team profile data, and process the trial queue.</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="admin-dashboard-section">
+        <h3 class="admin-dashboard-section__heading">Public Content</h3>
+        <div class="admin-grid admin-grid--cards">
+          <a class="admin-link-card" href="media-hub.html" data-admin-visible="admin">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Homepage Media Hub</span>
+              <span class="admin-link-card__access">Admin only</span>
+            </span>
+            <span class="admin-link-card__meta">Edit carousel tabs, headlines, bullet points, and links shown on the homepage.</span>
+          </a>
+          <a class="admin-link-card" href="tournaments.html" data-admin-visible="admin">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Competition Hub</span>
+              <span class="admin-link-card__access">Admin only</span>
+            </span>
+            <span class="admin-link-card__meta">Create, edit, publish, and remove competition records.</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="admin-dashboard-section">
+        <h3 class="admin-dashboard-section__heading">Review</h3>
+        <div class="admin-grid admin-grid--cards">
+          <a class="admin-link-card" href="analytics.html" data-admin-visible="admin">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Site Analytics</span>
+              <span class="admin-link-card__access">Admin only</span>
+            </span>
+            <span class="admin-link-card__meta">View page views, team profile views, social clicks, contact intent, and recent activity.</span>
+          </a>
+          <a class="admin-link-card" href="audit-logs.html" data-admin-visible="admin">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Audit Log Viewer</span>
+              <span class="admin-link-card__access">Admin only</span>
+            </span>
+            <span class="admin-link-card__meta">Review backend and admin changes with filters by action, team, and date.</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>How To Use Admin</h2>
+      <div class="admin-grid admin-grid--two">
+        <div class="admin-help-block" style="margin:0;">
+          <h3 class="admin-help-block__title">Daily Workflow</h3>
+          <ol class="admin-help-block__list">
+            <li>Check <strong>Site Analytics</strong> to see what visitors are clicking.</li>
+            <li>Use <strong>Homepage Media Hub</strong> to update homepage messaging.</li>
+            <li>Use <strong>Rosters + Trials</strong> and <strong>Match Calendar</strong> to keep team data current.</li>
+          </ol>
+        </div>
+        <div class="admin-help-block" style="margin:0;">
+          <h3 class="admin-help-block__title">Before You Save</h3>
+          <ul class="admin-help-block__list">
+            <li>Keep headlines short and easy to scan.</li>
+            <li>Use clear button text (example: Join Discord, View Schedule).</li>
+            <li>After saving, refresh the public page to confirm updates.</li>
+          </ul>
+        </div>
       </div>
     </section>
   </main>

@@ -1,5 +1,5 @@
-import { auth, db } from '/js/core/firebase.js';
-import { isEmailAllowlisted } from '/js/services/admin.service.js';
+import { db } from '/js/core/firebase.js';
+import { requireAdminOrCaptain } from '/js/services/authz.service.js';
 import { 
   collection, 
   query, 
@@ -20,26 +20,38 @@ function normalizeString(value) {
   return String(value || '').trim();
 }
 
-async function requireAllowlistedAdmin() {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('You must be signed in.');
+function normalizeResult(value) {
+  const normalized = normalizeString(value).toUpperCase();
+  if (normalized === 'WIN') return 'W';
+  if (normalized === 'LOSS') return 'L';
+  if (normalized === 'DRAW') return 'D';
+  return ['W', 'L', 'D'].includes(normalized) ? normalized : null;
+}
+
+function normalizeNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeStringList(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeString(item)).filter(Boolean);
   }
 
-  const email = normalizeString(user.email).toLowerCase();
-  if (!email) {
-    throw new Error('Signed-in user email is unavailable.');
-  }
+  return normalizeString(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
 
-  const allowlisted = await isEmailAllowlisted(email);
-  if (!allowlisted) {
-    throw new Error('You are not authorized to view match reports.');
-  }
+async function requireMatchEditor() {
+  return requireAdminOrCaptain();
 }
 
 /**
  * List matches for a specific team from Firestore.
- * @param {string} teamId - Team ID (horizon, proxima, spiral, faceit)
+ * @param {string} teamId - Team ID from teams.config.js
  * @param {object} options - Query options
  * @param {number} options.limit - Max number of matches to return
  * @param {boolean} options.upcomingOnly - If true, filter for future matches only
@@ -51,16 +63,16 @@ export async function listMatchesByTeam(teamId, { limit = 10, upcomingOnly = fal
     return [];
   }
 
-  const q = query(matchesRef);
+  const safeLimit = Math.min(Math.max(Number(limit) || 10, 1), 100);
+  const q = query(
+    matchesRef,
+    where('type', '==', 'official'),
+    where('teamId', '==', normalizedTeamId),
+    fbLimit(Math.min(Math.max(safeLimit * 12, 100), 300))
+  );
   const snapshot = await getDocs(q);
   const items = snapshot.docs
     .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
-    .filter((match) => {
-      const type = normalizeString(match.type).toLowerCase();
-      const source = normalizeString(match.source).toLowerCase();
-      return type === 'official' || (!type && source === 'schedule.html');
-    })
-    .filter((match) => normalizeString(match.teamId).toLowerCase() === normalizedTeamId)
     .filter((match) => {
       if (!upcomingOnly) return true;
       const date = match.scheduledAt?.toDate ? match.scheduledAt.toDate() : new Date(match.scheduledAt);
@@ -75,11 +87,11 @@ export async function listMatchesByTeam(teamId, { limit = 10, upcomingOnly = fal
       return upcomingOnly ? aTime - bTime : bTime - aTime;
     });
 
-  return items.slice(0, Math.max(3, limit));
+  return items.slice(0, Math.max(3, safeLimit));
 }
 
 export async function listMatchReportsForAdmin({ limit = 300 } = {}) {
-  await requireAllowlistedAdmin();
+  await requireMatchEditor();
 
   const safeLimit = Math.min(Math.max(Number(limit) || 300, 1), 500);
   const q = query(matchesRef, orderBy('createdAt', 'desc'), fbLimit(safeLimit));
@@ -110,11 +122,42 @@ export async function listOfficialMatches({ teamId = null, limit = 20 } = {}) {
   return items.slice(0, limit);
 }
 
+export async function listCompletedOfficialMatches({ teamId = null, limit = 100 } = {}) {
+  const normalizedTeamId = normalizeString(teamId).toLowerCase();
+  const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 300);
+  const q = query(matchesRef, where('type', '==', 'official'), fbLimit(Math.max(safeLimit * 3, 120)));
+  const snapshot = await getDocs(q);
+  const now = Date.now();
+
+  return snapshot.docs
+    .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+    .filter((match) => {
+      if (normalizedTeamId && normalizeString(match.teamId).toLowerCase() !== normalizedTeamId) {
+        return false;
+      }
+
+      const result = normalizeResult(match.result);
+      const date = match.scheduledAt?.toDate ? match.scheduledAt.toDate() : new Date(match.scheduledAt);
+      const hasPlayed = !Number.isNaN(date.getTime()) && date.getTime() < now;
+      return Boolean(result) || hasPlayed;
+    })
+    .sort((a, b) => {
+      const aDate = a.scheduledAt?.toDate ? a.scheduledAt.toDate() : new Date(a.scheduledAt);
+      const bDate = b.scheduledAt?.toDate ? b.scheduledAt.toDate() : new Date(b.scheduledAt);
+      const aTime = Number.isNaN(aDate.getTime()) ? 0 : aDate.getTime();
+      const bTime = Number.isNaN(bDate.getTime()) ? 0 : bDate.getTime();
+      return bTime - aTime;
+    })
+    .slice(0, safeLimit);
+}
+
 export async function listRecentOfficialMatches({ limit = 3 } = {}) {
   return listOfficialMatches({ limit });
 }
 
 export async function listAdminMatches({ teamId, limit = 50, upcomingOnly = true } = {}) {
+  await requireMatchEditor();
+
   const constraints = [];
   if (teamId) {
     constraints.push(where('teamId', '==', teamId));
@@ -171,6 +214,8 @@ export function buildMatchId({ teamId, scheduledAt, opponent }) {
  * @returns {Promise<void>}
  */
 export async function upsertMatches(matches, performedByEmail = null) {
+  await requireMatchEditor();
+
   if (!matches || matches.length === 0) {
     return;
   }
@@ -191,6 +236,7 @@ export async function upsertMatches(matches, performedByEmail = null) {
       teamId: match.teamId,
       opponent: match.opponent,
       opponentName: match.opponent,
+      eventName: normalizeString(match.eventName || match.tournamentName) || null,
       streamUrl: match.streamUrl || null,
       scheduledAt: Timestamp.fromDate(match.scheduledAt),
       source: 'schedule.html',
@@ -239,6 +285,8 @@ export async function clearImportedScheduleMatches(teamIds = []) {
 }
 
 export async function saveAdminMatch(match, performedByEmail = null) {
+  await requireMatchEditor();
+
   if (!match || !match.teamId || !match.opponent || !match.scheduledAt) {
     throw new Error('Match team, opponent, and date/time are required');
   }
@@ -263,7 +311,16 @@ export async function saveAdminMatch(match, performedByEmail = null) {
     teamId: match.teamId,
     opponent: match.opponent,
     opponentName: match.opponent,
+    eventName: normalizeString(match.eventName || match.tournamentName) || null,
     streamUrl: match.streamUrl || null,
+    result: normalizeResult(match.result),
+    score: normalizeString(match.score) || null,
+    mapScoreFor: normalizeNumber(match.mapScoreFor),
+    mapScoreAgainst: normalizeNumber(match.mapScoreAgainst),
+    mapsPlayed: normalizeStringList(match.mapsPlayed),
+    replayCode: normalizeString(match.replayCode) || null,
+    notes: normalizeString(match.notes) || null,
+    screenshotUrls: Array.isArray(match.screenshotUrls) ? match.screenshotUrls : [],
     scheduledAt: Timestamp.fromDate(scheduledDate),
     source: match.source || 'admin',
     createdAt: serverTimestamp(),

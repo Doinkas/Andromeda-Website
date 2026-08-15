@@ -3,8 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View Andromeda Esports team profiles, roster details, and competition information by division.">
+  <meta name="theme-color" content="#05070B">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Team Details | Andromeda Esports">
+  <meta property="og:description" content="Explore roster details, leadership, and match context for Andromeda teams.">
+  <meta property="og:image" content="/images/branding/andro-org.png">
   <script>window.__andromedaMotionFallback=window.setTimeout(function(){document.documentElement.classList.remove('js-motion');},2500);document.documentElement.classList.add('js-motion');</script>
   <title>Team Details | Andromeda Esports</title>
+  <link rel="icon" href="/images/branding/andro-org.png" type="image/png">
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -17,9 +24,9 @@
       </a>
       <a href="teams.html">Teams</a>
       <a href="schedule.html">Schedule</a>
-      <a href="scrims.html">Matches</a>
+      <a href="tournaments.html">Competition</a>
       <a href="merch.html">Merch</a>
-      <a href="contact.html">Contact</a>
+      <a href="contact.html">About</a>
     </nav>
   </header>
 
@@ -35,93 +42,139 @@
         <div class="team-hero__banner">
           <div class="team-hero__overlay"></div>
           <div class="team-hero__content container">
-            <img class="team-hero__logo page-header-item" src="" alt="Team logo" id="team-logo">
-            <div class="team-hero__meta page-header-item">
-              <span class="tier-badge" id="team-tier"></span>
-              <h1 class="team-hero__title" id="team-name"></h1>
-              <div class="team-hero__quickstats" aria-label="Team quick stats">
-                <span id="team-stat-roster">0 Players</span>
-                <span id="team-stat-upcoming">0 Upcoming</span>
-                <span id="team-stat-recent">0 Recent</span>
+            <div class="team-hero__identity page-header-item">
+              <img class="team-hero__logo" src="" alt="Team logo" id="team-logo">
+              <div class="team-hero__meta">
+                <div class="team-hero__eyebrow">
+                  <span class="tier-badge" id="team-tier"></span>
+                  <a class="team-hero__back" href="teams.html">All Teams</a>
+                </div>
+                <h1 class="team-hero__title" id="team-name"></h1>
+                <div class="team-hero__quickstats" aria-label="Team quick stats">
+                  <span id="team-stat-roster">0 Players</span>
+                  <span id="team-stat-upcoming">0 Upcoming</span>
+                  <span id="team-stat-recent">0 Recent</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div class="team-desc-wrap container page-header page-header-animate section-band section-band--alt">
-        <p class="team-desc page-header-item" id="team-desc"></p>
-      </div>
+      <section class="team-layout container" aria-label="Team profile layout">
+        <aside class="team-layout__sidebar">
+          <article class="team-card team-card--identity">
+            <h2>Overview</h2>
+            <p class="team-desc" id="team-desc"></p>
 
-      <nav class="team-nav container" aria-label="Team sections">
-        <a href="#roster">Roster</a>
-        <a href="#schedule">Schedule</a>
-        <a href="#scrims">Recent Matches</a>
-        <a href="#tryouts">Tryouts</a>
-      </nav>
-
-      <section class="team-section container section section-shell section-band section-band--base" id="roster" aria-labelledby="roster-heading">
-        <div class="section-inner">
-          <div class="section-head">
-            <h2 id="roster-heading">Roster</h2>
-          </div>
-          <div class="section-divider" aria-hidden="true"></div>
-          <div class="section-body">
-            <div class="roster-loading">Loading roster...</div>
-            <div class="roster-groups" style="display: none;">
-              <section class="roster-group roster-group--starters">
-                <h3>Starting 5</h3>
-                <ul class="roster-list roster-list--starters"></ul>
-              </section>
-              <section class="roster-group roster-group--subs">
-                <h3>Subs</h3>
-                <ul class="roster-list roster-list--subs"></ul>
-              </section>
+            <dl class="team-facts">
+              <div class="team-facts__item">
+                <dt>Region</dt>
+                <dd id="team-region">NA</dd>
+              </div>
+              <div class="team-facts__item">
+                <dt>Rating</dt>
+                <dd id="team-rating">Development</dd>
+              </div>
+              <div class="team-facts__item">
+                <dt>Manager</dt>
+                <dd id="team-manager">TBD</dd>
+              </div>
+              <div class="team-facts__item">
+                <dt>Coaches</dt>
+                <dd id="team-coaches">TBD</dd>
+              </div>
+              <div class="team-facts__item" id="team-staff-row" style="display: none;">
+                <dt>Staff</dt>
+                <dd id="team-staff-inline">TBD</dd>
+              </div>
+              <div class="team-facts__item">
+                <dt>Captain</dt>
+                <dd id="team-captain">TBD</dd>
+              </div>
+            </dl>
+            <div class="team-overview-achievements" id="team-achievements-card">
+              <h3>Achievements</h3>
+              <ul class="team-bullets" id="team-achievements-list"></ul>
             </div>
-            <p class="roster-empty" style="display: none;">No roster data available yet.</p>
-          </div>
-        </div>
-      </section>
+          </article>
+        </aside>
 
-      <section class="team-section container section section-shell section-band section-band--elevated" id="schedule" aria-labelledby="upcoming-schedule-heading">
-        <div class="section-inner">
-          <div class="section-head">
-            <h2 id="upcoming-schedule-heading">Upcoming Schedule</h2>
-          </div>
-          <div class="section-divider" aria-hidden="true"></div>
-          <div class="section-body">
-            <div id="upcoming-loading" class="schedule-loading">Loading matches...</div>
-            <ul id="upcoming-matches-list" class="schedule-list" style="display: none;"></ul>
-            <p id="upcoming-empty" class="schedule-empty" style="display: none;">No upcoming matches scheduled.</p>
-          </div>
-        </div>
-      </section>
+        <div class="team-layout__main">
+          <section class="team-section team-card" id="roster" aria-labelledby="roster-heading">
+            <div class="section-head">
+              <h2 id="roster-heading">Roster</h2>
+            </div>
+            <div class="section-divider" aria-hidden="true"></div>
+            <div class="section-body">
+              <div class="roster-loading">Loading roster...</div>
+              <div class="roster-groups" style="display: none;">
+                <section class="roster-group roster-group--starters">
+                  <h3>Starting 5</h3>
+                  <ul class="roster-list roster-list--starters"></ul>
+                </section>
+                <section class="roster-group roster-group--subs">
+                  <h3>Subs</h3>
+                  <ul class="roster-list roster-list--subs"></ul>
+                </section>
+              </div>
+              <p class="roster-empty" style="display: none;">No roster data available yet.</p>
+            </div>
+          </section>
 
-      <section class="team-section container section section-shell section-band section-band--base" id="scrims" aria-labelledby="recent-matches-heading">
-        <div class="section-inner">
-          <div class="section-head">
-            <h2 id="recent-matches-heading">Recent Matches</h2>
-          </div>
-          <div class="section-divider" aria-hidden="true"></div>
-          <div class="section-body">
-            <div id="recent-loading" class="scrims-loading">Loading official matches...</div>
-            <ul id="recent-matches-list" class="scrims-list" style="display: none;"></ul>
-            <p id="recent-empty" class="scrims-empty" style="display: none;">No official matches logged yet for this roster.</p>
-            <p><a class="btn" id="view-all-scrims-link" href="scrims.html">View all matches</a></p>
-          </div>
-        </div>
-      </section>
-
-      <section class="team-section container section section-shell section-band section-band--alt" id="tryouts" aria-labelledby="tryouts-heading">
-        <div class="section-inner">
-          <div class="section-head">
-            <h2 id="tryouts-heading">Tryouts</h2>
-          </div>
-          <div class="section-divider" aria-hidden="true"></div>
-          <div class="section-body">
-            <p>Interested in joining this team? Check our <a href="../pages/contact.html">contact page</a> or join our <a href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener">Discord</a> for tryout announcements.</p>
-            <p>Tryout information and application forms will be posted when positions open.</p>
-          </div>
+          <section class="team-section team-card team-match-center" id="matches" aria-labelledby="match-center-heading">
+            <div class="team-match-center__head">
+              <div>
+                <p class="team-match-center__kicker">Team Match Center</p>
+                <h2 id="match-center-heading">Schedule & History</h2>
+              </div>
+              <div class="team-match-center__tabs" role="group" aria-label="Choose match view">
+                <button class="team-match-center__tab is-active" id="match-tab-upcoming" type="button" data-match-tab="upcoming" aria-controls="match-panel-upcoming" aria-pressed="true">Upcoming</button>
+                <button class="team-match-center__tab" id="match-tab-recent" type="button" data-match-tab="recent" aria-controls="match-panel-recent" aria-pressed="false">Recent</button>
+                <button class="team-match-center__tab" id="match-tab-calendar" type="button" data-match-tab="calendar" aria-controls="match-panel-calendar" aria-pressed="false">Calendar</button>
+              </div>
+            </div>
+            <div class="section-divider" aria-hidden="true"></div>
+            <div class="section-body">
+              <div class="team-match-panel is-active" id="match-panel-upcoming" data-match-panel="upcoming" role="region" aria-labelledby="match-tab-upcoming">
+                <div id="upcoming-loading" class="schedule-loading">Loading matches...</div>
+                <ul id="upcoming-matches-list" class="schedule-list team-match-center__list" style="display: none;"></ul>
+                <p id="upcoming-empty" class="schedule-empty" style="display: none;">No upcoming matches are currently listed.</p>
+              </div>
+              <div class="team-match-panel" id="match-panel-recent" data-match-panel="recent" role="region" aria-labelledby="match-tab-recent" hidden>
+                <div id="recent-loading" class="scrims-loading">Loading official matches...</div>
+                <ul id="recent-matches-list" class="scrims-list team-match-center__list" style="display: none;"></ul>
+                <p id="recent-empty" class="scrims-empty" style="display: none;">No recent official matches are listed yet.</p>
+              </div>
+              <div class="team-match-panel" id="match-panel-calendar" data-match-panel="calendar" role="region" aria-labelledby="match-tab-calendar" hidden>
+                <div class="team-calendar">
+                  <div class="team-calendar__toolbar">
+                    <button class="team-calendar__nav" type="button" id="team-calendar-prev" aria-label="Previous month">&lt;</button>
+                    <h3 id="team-calendar-current">Calendar</h3>
+                    <button class="team-calendar__nav" type="button" id="team-calendar-next" aria-label="Next month">&gt;</button>
+                  </div>
+                  <div class="team-calendar__layout">
+                    <div>
+                      <div class="team-calendar__weekdays" aria-hidden="true">
+                        <span>Sun</span>
+                        <span>Mon</span>
+                        <span>Tue</span>
+                        <span>Wed</span>
+                        <span>Thu</span>
+                        <span>Fri</span>
+                        <span>Sat</span>
+                      </div>
+                      <div class="team-calendar__days" id="team-calendar-days"></div>
+                    </div>
+                    <aside class="team-calendar__agenda">
+                      <h4 id="team-calendar-agenda-title">Selected Day</h4>
+                      <div id="team-calendar-agenda-list" class="team-calendar__agenda-list"></div>
+                    </aside>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </section>
     </div>
@@ -132,8 +185,9 @@
       <div class="footer-nav">
         <a href="../index.html">Home</a>
         <a href="teams.html">Teams</a>
-        <a href="scrims.html">Matches</a>
-        <a href="contact.html">Contact</a>
+        <a href="schedule.html">Schedule</a>
+        <a href="tournaments.html">Competition</a>
+        <a href="contact.html">About</a>
       </div>
       <div class="footer-social">
         <a class="social btn" href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener">Join Discord</a>
@@ -148,6 +202,7 @@
   </footer>
 
   <script type="module" src="/js/team-page.js"></script>
+  <script type="module" src="/js/pages/site-analytics.js"></script>
   <script src="/js/animations.js" defer></script>
   <script src="/js/ambient-background.js" defer></script>
 </body>

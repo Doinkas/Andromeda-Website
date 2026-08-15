@@ -1,3 +1,5 @@
+import { getHomeMediaHubContent } from '/js/services/media-hub.service.js';
+
 const root = document.querySelector('[data-module="devpath-carousel"]');
 
 if (!root) {
@@ -9,6 +11,9 @@ if (!root) {
   const nextButton = root.querySelector('[data-dev-carousel-next]');
   const dots = Array.from(root.querySelectorAll('[data-dev-carousel-dot]'));
   const viewport = root.querySelector('.dev-carousel__viewport');
+  const mediaIcons = Array.from(root.querySelectorAll('[data-media-icon]'));
+  const mediaSlides = Array.from(root.querySelectorAll('[data-media-slide]'));
+  const mediaTabs = Array.from(root.querySelectorAll('[data-media-tab]'));
 
   let activeIndex = 0;
   let timer = null;
@@ -33,6 +38,111 @@ if (!root) {
       dot.classList.toggle('is-active', isActive);
       dot.setAttribute('aria-selected', isActive ? 'true' : 'false');
       dot.setAttribute('tabindex', isActive ? '0' : '-1');
+    });
+  }
+
+  function setSafeLinkAttributes(link, href) {
+    const isExternal = /^https?:\/\//i.test(href);
+    if (isExternal) {
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener');
+      return;
+    }
+
+    link.removeAttribute('target');
+    link.removeAttribute('rel');
+  }
+
+  function applyMediaHubContent(content) {
+    const slidesData = Array.isArray(content?.slides) ? content.slides : [];
+
+    mediaSlides.forEach((slideEl, index) => {
+      const slide = slidesData[index];
+      if (!slide) return;
+
+      const badgeEl = slideEl.querySelector('[data-media-badge]');
+      const titleEl = slideEl.querySelector('[data-media-title]');
+      const descriptionEl = slideEl.querySelector('[data-media-description]');
+      const bulletsEl = slideEl.querySelector('[data-media-bullets]');
+      const actionsEl = slideEl.querySelector('[data-media-actions]');
+
+      if (badgeEl) badgeEl.textContent = String(slide.badge || '').trim() || badgeEl.textContent;
+      if (titleEl) titleEl.textContent = String(slide.title || '').trim() || titleEl.textContent;
+      if (descriptionEl) descriptionEl.textContent = String(slide.description || '').trim() || descriptionEl.textContent;
+
+      if (bulletsEl && Array.isArray(slide.bullets)) {
+        bulletsEl.innerHTML = '';
+        const bullets = slide.bullets
+          .map((item) => String(item || '').trim())
+          .filter(Boolean);
+
+        if (bulletsEl.tagName.toLowerCase() === 'ul') {
+          bullets.forEach((text) => {
+            const li = document.createElement('li');
+            li.textContent = text;
+            bulletsEl.appendChild(li);
+          });
+        } else {
+          bulletsEl.textContent = bullets
+            .map((text) => /[.!?]$/.test(text) ? text : `${text}.`)
+            .join(' ');
+        }
+      }
+
+      if (actionsEl && Array.isArray(slide.actions)) {
+        const videoUrl = String(slide.media?.videoUrl || '').trim();
+        const actions = [...slide.actions];
+        if (videoUrl && !actions.some((action) => String(action?.href || '').trim() === videoUrl)) {
+          actions.push({ label: 'Watch media', href: videoUrl, primary: false });
+        }
+
+        actionsEl.innerHTML = '';
+        actions.forEach((action) => {
+          const label = String(action?.label || '').trim();
+          const href = String(action?.href || '').trim();
+          if (!label || !href) return;
+
+          const link = document.createElement('a');
+          link.className = action?.primary === true ? 'btn primary' : 'btn';
+          link.textContent = label;
+          link.href = href;
+          setSafeLinkAttributes(link, href);
+          actionsEl.appendChild(link);
+        });
+      }
+    });
+
+    mediaTabs.forEach((tabEl, index) => {
+      const slide = slidesData[index];
+      if (!slide) return;
+
+      const label = String(slide.tabLabel || '').trim();
+      if (!label) return;
+      tabEl.textContent = label;
+      tabEl.setAttribute('aria-label', `Show ${label.toLowerCase()}`);
+    });
+
+    mediaIcons.forEach((asideEl, index) => {
+      const slide = slidesData[index];
+      if (!slide) return;
+      const mediaUrl = String(slide.media?.url || '').trim();
+      const mediaAlt = String(slide.media?.alt || '').trim();
+      const icon = mediaUrl || String(slide.icon || '').trim();
+      if (!icon) return;
+
+      const isUrl = /^(https?:\/\/|\/)/.test(icon) || /\.(png|jpe?g|gif|webp|svg|avif)(\?|$)/i.test(icon);
+      asideEl.innerHTML = '';
+      if (isUrl) {
+        const img = document.createElement('img');
+        img.src = icon;
+        img.alt = mediaAlt;
+        asideEl.appendChild(img);
+      } else {
+        const span = document.createElement('span');
+        span.className = 'dev-slide__icon-emoji';
+        span.textContent = icon;
+        asideEl.appendChild(span);
+      }
     });
   }
 
@@ -132,6 +242,18 @@ if (!root) {
     }
   });
 
-  setIndex(0);
-  startAutoRotate();
+  async function init() {
+    setIndex(0);
+    startAutoRotate();
+
+    try {
+      const mediaHubContent = await getHomeMediaHubContent();
+      applyMediaHubContent(mediaHubContent);
+      setIndex(activeIndex);
+    } catch (error) {
+      console.warn('Failed to load media hub content, using fallback markup:', error);
+    }
+  }
+
+  void init();
 }

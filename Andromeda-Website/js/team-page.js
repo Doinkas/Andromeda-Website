@@ -1,9 +1,13 @@
 import { getRoster } from '/js/services/rosters.service.js';
 import { listMatchesByTeam } from '/js/services/matches.service.js';
-import { initPlayerTooltips } from '/js/ui/playerTooltip.ui.js';
 import { TEAM_REGISTRY, TEAM_IDS, SCHEDULE_LABEL_TO_TEAM_ID } from '/js/config/teams.config.js';
 
 const VALID_TEAMS = TEAM_IDS;
+const matchCenterState = {
+  matches: [],
+  calendarDate: new Date(),
+  selectedDateKey: null
+};
 
 const TEAM_CONFIG = Object.fromEntries(
   Object.entries(TEAM_REGISTRY).map(([teamId, meta]) => [
@@ -11,12 +15,39 @@ const TEAM_CONFIG = Object.fromEntries(
     {
       name: meta.name,
       tier: meta.tier,
+      region: meta.region,
+      rating: meta.rating,
       banner: meta.banner,
       logo: meta.logo,
-      description: meta.description
+      description: meta.description,
+      manager: meta.staff?.manager || 'TBD',
+      coaches: meta.staff?.coaches || 'TBD',
+      captain: meta.staff?.captain || 'TBD',
+      highlights: Array.isArray(meta.highlights) ? meta.highlights : [],
+      achievements: Array.isArray(meta.achievements) ? meta.achievements : []
     }
   ])
 );
+
+function pickText(value, fallback = '') {
+  const next = String(value || '').trim();
+  return next || fallback;
+}
+
+function pickList(value, fallback = []) {
+  if (Array.isArray(value) && value.length) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(/\r?\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return Array.isArray(fallback) ? fallback : [];
+}
 
 function getTeamIdFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -43,16 +74,18 @@ async function loadTeamMetadata(teamId) {
     const rosterDoc = await getRoster(teamId);
     const profile = rosterDoc?.teamProfile || {};
 
-    const pickText = (value, fallback = '') => {
-      const next = String(value || '').trim();
-      return next || fallback;
-    };
-
     return {
       ...base,
       name: pickText(profile.displayName, base.name),
       tier: pickText(profile.tier, base.tier),
-      description: pickText(profile.description, base.description)
+      region: pickText(profile.region, base.region),
+      rating: pickText(profile.rating, base.rating),
+      description: pickText(profile.description, base.description),
+      manager: pickText(profile.manager, base.manager),
+      coaches: pickText(profile.coaches, base.coaches),
+      captain: pickText(profile.captain, base.captain),
+      highlights: pickList(profile.highlights, base.highlights),
+      achievements: pickList(profile.achievements, base.achievements)
     };
   } catch (_error) {
     return base;
@@ -63,7 +96,7 @@ function renderTeamHero(teamId, metadata) {
   applyTeamTheme(teamId);
 
   const heroBanner = document.querySelector('.team-hero__banner');
-  heroBanner.style.backgroundImage = buildBannerBackground(metadata.banner);
+  heroBanner.style.setProperty('--team-banner-image', buildBannerBackground(metadata.banner));
 
   document.getElementById('team-logo').src = metadata.logo;
   document.getElementById('team-logo').alt = `${metadata.name} logo`;
@@ -73,6 +106,49 @@ function renderTeamHero(teamId, metadata) {
 
   const descEl = document.getElementById('team-desc');
   if (descEl) descEl.textContent = metadata.description || '';
+
+  const upcomingEmptyEl = document.getElementById('upcoming-empty');
+  if (upcomingEmptyEl) {
+    upcomingEmptyEl.textContent = `No upcoming matches are currently listed for ${metadata.name}.`;
+  }
+
+  const recentEmptyEl = document.getElementById('recent-empty');
+  if (recentEmptyEl) {
+    recentEmptyEl.textContent = `No recent official matches are listed for ${metadata.name} yet.`;
+  }
+
+  setIdentityField('team-region', metadata.region || 'NA');
+  setIdentityField('team-rating', metadata.rating || 'Development');
+  setIdentityField('team-manager', metadata.manager || 'TBD');
+  setIdentityField('team-coaches', metadata.coaches || 'TBD');
+  setIdentityField('team-captain', metadata.captain || 'TBD');
+  renderIdentityList('team-achievements-list', metadata.achievements || [], 'team-achievements-card');
+}
+
+function setIdentityField(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function renderIdentityList(listId, items, cardId) {
+  const listEl = document.getElementById(listId);
+  const cardEl = document.getElementById(cardId);
+  if (!listEl) return;
+
+  const normalized = Array.isArray(items)
+    ? items.map((item) => String(item || '').trim()).filter(Boolean)
+    : [];
+
+  listEl.innerHTML = '';
+  normalized.forEach((item) => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    listEl.appendChild(li);
+  });
+
+  if (cardEl) {
+    cardEl.style.display = normalized.length ? 'block' : 'none';
+  }
 }
 
 function applyTeamTheme(teamId) {
@@ -82,6 +158,36 @@ function applyTeamTheme(teamId) {
 function setHeroStatValue(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;
+}
+
+function hasStaffRole(player) {
+  const roles = Array.isArray(player?.roles)
+    ? player.roles
+    : String(player?.roles || '')
+      .split(',')
+      .map((role) => role.trim())
+      .filter(Boolean);
+
+  return roles.some((role) => String(role || '').toLowerCase().trim() === 'staff');
+}
+
+function renderStaffInline(staffPlayers) {
+  const staffRow = document.getElementById('team-staff-row');
+  const staffValue = document.getElementById('team-staff-inline');
+  if (!staffRow || !staffValue) return;
+
+  const normalized = Array.isArray(staffPlayers)
+    ? staffPlayers.map((player) => String(player?.name || '').trim()).filter(Boolean)
+    : [];
+
+  if (!normalized.length) {
+    staffRow.style.display = 'none';
+    staffValue.textContent = 'TBD';
+    return;
+  }
+
+  staffValue.textContent = normalized.join(' / ');
+  staffRow.style.display = 'grid';
 }
 
 function buildBannerBackground(bannerUrl) {
@@ -128,8 +234,12 @@ function renderRoster(roster) {
     };
   });
 
-  const starters = normalizedPlayers.filter((player) => player.lineup === 'starter');
-  const subs = normalizedPlayers.filter((player) => player.lineup === 'sub');
+  const staffPlayers = normalizedPlayers.filter((player) => hasStaffRole(player));
+  const competitivePlayers = normalizedPlayers.filter((player) => !hasStaffRole(player));
+  const starters = competitivePlayers.filter((player) => player.lineup === 'starter');
+  const subs = competitivePlayers.filter((player) => player.lineup === 'sub');
+
+  renderStaffInline(staffPlayers);
 
   startersListEl.innerHTML = '';
   subsListEl.innerHTML = '';
@@ -137,10 +247,6 @@ function renderRoster(roster) {
   const renderPlayer = (listEl, player) => {
     const li = document.createElement('li');
     li.className = 'roster-player';
-
-    // Attach player data for tooltip initialization
-    li.setAttribute('data-player-name', player.name);
-    li.setAttribute('data-player-profile', JSON.stringify(player.profile || {}));
 
     const playerName = document.createElement('span');
     playerName.className = 'player-name-inline';
@@ -179,9 +285,6 @@ function renderRoster(roster) {
   } else {
     setHeroStatValue('team-stat-roster', `${starters.length} Players`);
   }
-
-  // Initialize player tooltips
-  initPlayerTooltips();
 }
 
 function formatMatchDate(timestamp) {
@@ -194,6 +297,40 @@ function formatMatchDate(timestamp) {
     hour: 'numeric',
     minute: '2-digit'
   });
+}
+
+function getMatchDate(match) {
+  const date = match?.scheduledAt?.toDate ? match.scheduledAt.toDate() : new Date(match?.scheduledAt);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function getDateKey(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getMatchEventLabel(match) {
+  return pickText(match?.eventName, pickText(match?.event, pickText(match?.tournamentName, pickText(match?.source, 'Official Match'))));
+}
+
+function getMatchStreamUrl(match) {
+  return pickText(match?.streamUrl, pickText(match?.vodUrl, pickText(match?.watchUrl, '')));
+}
+
+function getMatchScoreLabel(match) {
+  const score = pickText(match?.score, '');
+  if (score) return score;
+
+  const mapScoreFor = Number(match?.mapScoreFor);
+  const mapScoreAgainst = Number(match?.mapScoreAgainst);
+  if (Number.isFinite(mapScoreFor) && Number.isFinite(mapScoreAgainst)) {
+    return `${mapScoreFor}-${mapScoreAgainst}`;
+  }
+
+  return '';
 }
 
 function renderMatches(listEl, matches) {
@@ -209,9 +346,9 @@ function renderMatches(listEl, matches) {
     const strong = document.createElement('span');
     strong.className = 'match-result';
     const result = String(match.result || '').trim().toUpperCase();
-    if (result === 'W' || result === 'L') {
+    if (result === 'W' || result === 'L' || result === 'D') {
       strong.textContent = result;
-      strong.classList.add(result === 'W' ? 'match-result--win' : 'match-result--loss');
+      strong.classList.add(result === 'W' ? 'match-result--win' : result === 'L' ? 'match-result--loss' : 'match-result--draw');
     } else {
       strong.textContent = 'UPCOMING';
       strong.classList.add('match-result--upcoming');
@@ -232,6 +369,48 @@ function renderMatches(listEl, matches) {
     dateSpan.textContent = formatMatchDate(match.scheduledAt);
 
     metaRow.appendChild(dateSpan);
+
+    const eventLabel = getMatchEventLabel(match);
+    if (eventLabel) {
+      const eventSpan = document.createElement('span');
+      eventSpan.className = 'match-event';
+      eventSpan.textContent = eventLabel;
+      metaRow.appendChild(eventSpan);
+    }
+
+    const scoreLabel = getMatchScoreLabel(match);
+    if (scoreLabel) {
+      const scoreSpan = document.createElement('span');
+      scoreSpan.className = 'match-score';
+      scoreSpan.textContent = `Score: ${scoreLabel}`;
+      metaRow.appendChild(scoreSpan);
+    }
+
+    if (Array.isArray(match.mapsPlayed) && match.mapsPlayed.length) {
+      const mapsSpan = document.createElement('span');
+      mapsSpan.className = 'match-maps';
+      mapsSpan.textContent = `Maps: ${match.mapsPlayed.join(', ')}`;
+      metaRow.appendChild(mapsSpan);
+    }
+
+    if (match.replayCode) {
+      const replaySpan = document.createElement('span');
+      replaySpan.className = 'match-replay';
+      replaySpan.textContent = `Replay: ${match.replayCode}`;
+      metaRow.appendChild(replaySpan);
+    }
+
+    const streamUrl = getMatchStreamUrl(match);
+    if (streamUrl) {
+      const streamLink = document.createElement('a');
+      streamLink.className = 'match-watch-link';
+      streamLink.href = streamUrl;
+      streamLink.target = '_blank';
+      streamLink.rel = 'noopener';
+      streamLink.textContent = 'Watch';
+      metaRow.appendChild(streamLink);
+    }
+
     li.appendChild(topRow);
     li.appendChild(metaRow);
 
@@ -283,6 +462,162 @@ function renderRecentMatches(matches) {
   setHeroStatValue('team-stat-recent', `${matches.length} Recent`);
 }
 
+function initMatchCenterTabs() {
+  const tabs = Array.from(document.querySelectorAll('[data-match-tab]'));
+  const panels = Array.from(document.querySelectorAll('[data-match-panel]'));
+  if (!tabs.length || !panels.length) return;
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.matchTab;
+
+      tabs.forEach((item) => {
+        const isActive = item === tab;
+        item.classList.toggle('is-active', isActive);
+        item.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+
+      panels.forEach((panel) => {
+        const isActive = panel.dataset.matchPanel === target;
+        panel.classList.toggle('is-active', isActive);
+        panel.hidden = !isActive;
+      });
+    });
+  });
+}
+
+function initTeamCalendarControls() {
+  document.getElementById('team-calendar-prev')?.addEventListener('click', () => {
+    matchCenterState.calendarDate = new Date(
+      matchCenterState.calendarDate.getFullYear(),
+      matchCenterState.calendarDate.getMonth() - 1,
+      1
+    );
+    renderTeamCalendar();
+  });
+
+  document.getElementById('team-calendar-next')?.addEventListener('click', () => {
+    matchCenterState.calendarDate = new Date(
+      matchCenterState.calendarDate.getFullYear(),
+      matchCenterState.calendarDate.getMonth() + 1,
+      1
+    );
+    renderTeamCalendar();
+  });
+}
+
+function setMatchCenterMatches(upcoming = [], recent = []) {
+  const merged = [...upcoming, ...recent]
+    .map((match) => ({ ...match, __date: getMatchDate(match) }))
+    .filter((match) => match.__date)
+    .sort((a, b) => a.__date.getTime() - b.__date.getTime());
+
+  matchCenterState.matches = merged;
+  const nextUpcoming = upcoming.map((match) => getMatchDate(match)).find(Boolean);
+  const fallbackDate = merged[0]?.__date || new Date();
+  const baseDate = nextUpcoming || fallbackDate;
+  matchCenterState.calendarDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+  matchCenterState.selectedDateKey = getDateKey(nextUpcoming || fallbackDate);
+  renderTeamCalendar();
+}
+
+function renderTeamCalendar() {
+  const daysEl = document.getElementById('team-calendar-days');
+  const currentEl = document.getElementById('team-calendar-current');
+  if (!daysEl || !currentEl) return;
+
+  const monthDate = matchCenterState.calendarDate;
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstOfMonth = new Date(year, month, 1);
+  const startDate = new Date(year, month, 1 - firstOfMonth.getDay());
+  const todayKey = getDateKey(new Date());
+  const byDate = groupMatchesByDate(matchCenterState.matches);
+
+  currentEl.textContent = monthDate.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric'
+  });
+
+  daysEl.innerHTML = '';
+  for (let index = 0; index < 42; index += 1) {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + index);
+    const dateKey = getDateKey(date);
+    const matches = byDate.get(dateKey) || [];
+
+    const button = document.createElement('button');
+    button.className = 'team-calendar__day';
+    button.type = 'button';
+    button.dataset.dateKey = dateKey;
+    button.classList.toggle('is-outside-month', date.getMonth() !== month);
+    button.classList.toggle('is-today', dateKey === todayKey);
+    button.classList.toggle('is-selected', dateKey === matchCenterState.selectedDateKey);
+    button.disabled = !matches.length;
+    button.innerHTML = `
+      <span class="team-calendar__day-number">${date.getDate()}</span>
+      ${matches.length ? `<span class="team-calendar__day-count">${matches.length}</span>` : ''}
+    `;
+    button.addEventListener('click', () => {
+      matchCenterState.selectedDateKey = dateKey;
+      renderTeamCalendar();
+    });
+
+    daysEl.appendChild(button);
+  }
+
+  renderCalendarAgenda(byDate);
+}
+
+function groupMatchesByDate(matches) {
+  const byDate = new Map();
+  matches.forEach((match) => {
+    const dateKey = getDateKey(match.__date || getMatchDate(match));
+    if (!dateKey) return;
+    if (!byDate.has(dateKey)) byDate.set(dateKey, []);
+    byDate.get(dateKey).push(match);
+  });
+  return byDate;
+}
+
+function renderCalendarAgenda(byDate) {
+  const titleEl = document.getElementById('team-calendar-agenda-title');
+  const listEl = document.getElementById('team-calendar-agenda-list');
+  if (!titleEl || !listEl) return;
+
+  const selectedKey = matchCenterState.selectedDateKey;
+  const selectedDate = selectedKey ? new Date(`${selectedKey}T12:00:00`) : null;
+  const matches = selectedKey ? byDate.get(selectedKey) || [] : [];
+
+  titleEl.textContent = selectedDate && !Number.isNaN(selectedDate.getTime())
+    ? selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+    : 'Selected Day';
+
+  listEl.innerHTML = '';
+  if (!matchCenterState.matches.length) {
+    listEl.innerHTML = '<p class="team-calendar__empty">No match dates are available for this team yet.</p>';
+    return;
+  }
+
+  if (!matches.length) {
+    listEl.innerHTML = '<p class="team-calendar__empty">No matches on this day.</p>';
+    return;
+  }
+
+  matches.forEach((match) => {
+    const item = document.createElement('article');
+    item.className = 'team-calendar__agenda-item';
+    const streamUrl = getMatchStreamUrl(match);
+    item.innerHTML = `
+      <strong>vs ${match.opponent || match.opponentName || 'TBD'}</strong>
+      <span>${formatMatchDate(match.scheduledAt)}</span>
+      <span>${getMatchEventLabel(match)}</span>
+      ${streamUrl ? `<a href="${streamUrl}" target="_blank" rel="noopener">Watch</a>` : ''}
+    `;
+    listEl.appendChild(item);
+  });
+}
+
 function parseScheduleTeamLabel(rawTeamCell) {
   const text = String(rawTeamCell || '').trim();
   const colonIndex = text.indexOf(':');
@@ -329,6 +664,45 @@ async function loadUpcomingFromPublicSchedule(teamId, limit = 5) {
     const html = await response.text();
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
+
+    const payloadScript = doc.getElementById('schedule-data');
+    if (payloadScript?.textContent) {
+      const payload = JSON.parse(payloadScript.textContent);
+      const now = Date.now();
+      const items = Array.isArray(payload?.events)
+        ? payload.events
+            .map((event) => {
+              if (String(event?.teamId || '').trim().toLowerCase() !== teamId) return null;
+
+              const date = new Date(event.date);
+              if (Number.isNaN(date.getTime()) || date.getTime() < now) return null;
+
+              const opponent = String(event.opponent || event.opponentName || '').trim();
+              if (!opponent || opponent.toUpperCase() === 'BYE') return null;
+
+              return {
+                opponent,
+                opponentName: opponent,
+                scheduledAt: date,
+                streamUrl: String(event.streamUrl || '').trim() || null,
+                eventName: String(event.eventName || event.event || event.tournamentName || '').trim() || null,
+                type: String(event.type || 'official').trim().toLowerCase() || 'official',
+                source: 'schedule-data'
+              };
+            })
+            .filter(Boolean)
+            .sort((a, b) => {
+              const aTime = a.scheduledAt instanceof Date ? a.scheduledAt.getTime() : new Date(a.scheduledAt).getTime();
+              const bTime = b.scheduledAt instanceof Date ? b.scheduledAt.getTime() : new Date(b.scheduledAt).getTime();
+              return aTime - bTime;
+            })
+        : [];
+
+      if (items.length) {
+        return items.slice(0, limit);
+      }
+    }
+
     const rows = Array.from(doc.querySelectorAll('.schedule-week tbody tr'));
 
     const now = Date.now();
@@ -403,20 +777,15 @@ async function loadTeamSchedule(teamId) {
       const bTime = Number.isNaN(bDate.getTime()) ? 0 : bDate.getTime();
       return bTime - aTime;
     })
-    .slice(0, 5);
+    .slice(0, 10);
 
   renderRecentMatches(recent);
-}
-
-function setRecentMatchesLink(teamId) {
-  const viewAllLink = document.getElementById('view-all-scrims-link');
-
-  if (viewAllLink) {
-    viewAllLink.href = `scrims.html?teamId=${encodeURIComponent(teamId)}`;
-  }
+  setMatchCenterMatches(upcoming, recent);
 }
 
 async function init() {
+  initMatchCenterTabs();
+  initTeamCalendarControls();
   const teamId = getTeamIdFromUrl();
 
   if (!teamId) {
@@ -432,6 +801,7 @@ async function init() {
   try {
     const metadata = await loadTeamMetadata(teamId);
     renderTeamHero(teamId, metadata);
+    showTeam();
 
     // Load roster
     getRoster(teamId)
@@ -440,8 +810,6 @@ async function init() {
         console.error('Failed to load roster:', err);
         document.querySelector('.roster-loading').textContent = 'Error loading roster.';
       });
-
-    setRecentMatchesLink(teamId);
 
     // Load schedule and recent official matches into separate sections
     loadTeamSchedule(teamId)

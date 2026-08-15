@@ -81,6 +81,20 @@ function parseStats(value) {
   }
 }
 
+function applyOptionalMatchFields(payload, matchData) {
+  const mapScoreFor = parseOptionalNumber(matchData.mapScoreFor);
+  const mapScoreAgainst = parseOptionalNumber(matchData.mapScoreAgainst);
+  const mapsPlayed = parseMapsPlayed(matchData.mapsPlayed);
+  const notes = normalizeString(matchData.notes);
+  const stats = parseStats(matchData.stats);
+
+  if (mapScoreFor !== null) payload.mapScoreFor = mapScoreFor;
+  if (mapScoreAgainst !== null) payload.mapScoreAgainst = mapScoreAgainst;
+  if (mapsPlayed.length) payload.mapsPlayed = mapsPlayed;
+  if (notes) payload.notes = notes;
+  if (stats) payload.stats = stats;
+}
+
 function validateImageFile(file) {
   if (!file) return;
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
@@ -157,13 +171,9 @@ export async function createMatchDoc(matchData) {
     createdAt: serverTimestamp(),
     createdByUid: authz.user.uid,
     createdByEmail: authz.email,
-    mapScoreFor: parseOptionalNumber(matchData.mapScoreFor),
-    mapScoreAgainst: parseOptionalNumber(matchData.mapScoreAgainst),
-    mapsPlayed: parseMapsPlayed(matchData.mapsPlayed),
-    notes: normalizeString(matchData.notes),
-    stats: parseStats(matchData.stats),
     screenshotUrls: Array.isArray(matchData.screenshotUrls) ? matchData.screenshotUrls : []
   };
+  applyOptionalMatchFields(payload, matchData);
 
   const matchRef = doc(matchesRef);
   await setDoc(matchRef, payload);
@@ -214,13 +224,9 @@ export async function createMatchEntry(matchData, files = [], onProgress = null)
     createdAt: serverTimestamp(),
     createdByUid: authz.user.uid,
     createdByEmail: authz.email,
-    mapScoreFor: parseOptionalNumber(matchData.mapScoreFor),
-    mapScoreAgainst: parseOptionalNumber(matchData.mapScoreAgainst),
-    mapsPlayed: parseMapsPlayed(matchData.mapsPlayed),
-    notes: normalizeString(matchData.notes),
-    stats: parseStats(matchData.stats),
     screenshotUrls
   };
+  applyOptionalMatchFields(payload, matchData);
 
   await setDoc(matchRef, payload);
 

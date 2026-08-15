@@ -3,8 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Review Andromeda Esports competition history, league runs, records, placements, and milestone achievements.">
+  <meta name="theme-color" content="#05070B">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Competition Hub | Andromeda Esports">
+  <meta property="og:description" content="Published results, records, and achievement highlights across Andromeda competition history.">
+  <meta property="og:image" content="/images/branding/andro-org.png">
   <script>window.__andromedaMotionFallback=window.setTimeout(function(){document.documentElement.classList.remove('js-motion');},2500);document.documentElement.classList.add('js-motion');</script>
-  <title>Tournament History — Andromeda Esports</title>
+  <title>Competition Hub | Andromeda Esports</title>
+  <link rel="icon" href="/images/branding/andro-org.png" type="image/png">
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -16,9 +23,9 @@
       </a>
       <a href="teams.html">Teams</a>
       <a href="schedule.html">Schedule</a>
-      <a href="scrims.html">Matches</a>
+      <a href="tournaments.html">Competition</a>
       <a href="merch.html">Merch</a>
-      <a href="contact.html">Contact</a>
+      <a href="contact.html">About</a>
     </nav>
   </header>
 
@@ -26,9 +33,9 @@
     <section class="section section-shell section-band section-band--elevated" aria-labelledby="tournaments-heading">
       <div class="section-inner">
       <div class="page-header page-header-animate section-head">
-        <p class="section-kicker">History</p>
-        <h1 id="tournaments-heading" class="page-header-item">Tournament History</h1>
-        <p class="lead page-header-item">Published tournament results and milestone achievements.</p>
+        <p class="section-kicker">Competition Hub</p>
+        <h1 id="tournaments-heading" class="page-header-item">Results, Leagues, And Milestones</h1>
+        <p class="lead page-header-item">Published results, records, placements, and league runs across Andromeda teams.</p>
       </div>
 
       <div class="section-divider" aria-hidden="true"></div>
@@ -36,18 +43,43 @@
 
       <div class="tournament-totals">
         <article class="card tournament-total-item">
-          <p class="muted">Tournaments</p>
-          <p class="tournament-total-value" data-total-tournaments>0</p>
+          <p class="muted">Match Reports</p>
+          <p class="tournament-total-value" data-total-match-reports>0</p>
         </article>
         <article class="card tournament-total-item">
           <p class="muted">Combined Record</p>
-          <p class="tournament-total-value" data-total-record>0W-0L</p>
+          <p class="tournament-total-value" data-total-match-record>0W-0L</p>
         </article>
         <article class="card tournament-total-item">
-          <p class="muted">Achievements</p>
-          <p class="tournament-total-value" data-total-achievements>0</p>
+          <p class="muted">Event Records</p>
+          <p class="tournament-total-value" data-total-tournaments>0</p>
         </article>
       </div>
+
+      <section class="competition-results" aria-labelledby="competition-results-heading">
+        <div class="competition-section-head">
+          <div>
+            <h2 id="competition-results-heading">All-Team Match Reports</h2>
+            <p class="muted">Completed official matches from every roster. Filter by team to see that roster's recent performance.</p>
+          </div>
+          <label for="competition-team-filter" class="competition-filter">
+            <span>Team</span>
+            <select id="competition-team-filter" class="scrims-filter">
+              <option value="">All teams</option>
+            </select>
+          </label>
+        </div>
+        <p id="competition-match-status" class="muted">Loading match reports...</p>
+        <div id="competition-match-list" class="competition-match-grid"></div>
+      </section>
+
+      <section class="competition-results" aria-labelledby="competition-records-heading">
+        <div class="competition-section-head">
+          <div>
+            <h2 id="competition-records-heading">League And Event Records</h2>
+            <p class="muted">Published tournament, league, and milestone records can live here alongside match reports.</p>
+          </div>
+        </div>
 
       <div class="scrims-toolbar">
         <label for="tournaments-game-filter">Filter by game</label>
@@ -58,6 +90,7 @@
 
       <p id="tournaments-status" class="muted">Loading tournaments...</p>
       <div id="tournaments-list" class="tournaments-grid"></div>
+      </section>
       </div>
       </div>
     </section>
@@ -68,8 +101,9 @@
       <div class="footer-nav">
         <a href="../index.html">Home</a>
         <a href="teams.html">Teams</a>
-        <a href="scrims.html">Matches</a>
-        <a href="contact.html">Contact</a>
+        <a href="schedule.html">Schedule</a>
+        <a href="tournaments.html">Competition</a>
+        <a href="contact.html">About</a>
       </div>
       <div class="footer-social">
         <a class="social btn" href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener">Join Discord</a>
@@ -84,6 +118,7 @@
   </footer>
 
   <script type="module" src="/js/tournaments-page.js"></script>
+  <script type="module" src="/js/pages/site-analytics.js"></script>
   <script src="/js/animations.js" defer></script>
   <script src="/js/ambient-background.js" defer></script>
 </body>

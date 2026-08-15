@@ -17,7 +17,6 @@
     '#team-error',
     '.team-hero',
     '.team-desc-wrap',
-    '.scrims-page',
     '.card',
     '.panel',
     '.news-item',
@@ -26,10 +25,10 @@
     '.division-team-card',
     '.contact-card',
     '.product-card',
-    '.schedule-week',
+    '.schedule-calendar-shell',
+    '.schedule-agenda',
     '.tournament-card',
     '.tournament-total-item',
-    '.scrim-item',
     '.team-nav',
     '.team-section'
   ];
@@ -41,7 +40,6 @@
     ['.merch-grid', '.product-card'],
     ['.division-team-grid', '.division-team-card'],
     ['.tournaments-grid', '.tournament-card'],
-    ['.scrims-page-list', '.scrim-item'],
     ['#news-list', '.news-item']
   ];
 
@@ -58,8 +56,8 @@
           observer.unobserve(entry.target);
         });
       }, {
-        threshold: 0.16,
-        rootMargin: '0px 0px -10% 0px'
+        threshold: 0.1,
+        rootMargin: '0px 0px -6% 0px'
       })
     : null;
 
@@ -70,7 +68,7 @@
       const items = Array.from(header.querySelectorAll('.page-header-item'));
 
       items.forEach((item, index) => {
-        item.style.setProperty('--page-header-delay', `${index * 80}ms`);
+        item.style.setProperty('--page-header-delay', `${index * 50}ms`);
       });
 
       if (prefersReducedMotion) {
@@ -87,9 +85,9 @@
         headers.forEach((header, index) => {
           window.setTimeout(() => {
             header.classList.add('page-header-visible');
-          }, index * 40);
+          }, index * 24);
         });
-      }, 120);
+      }, 50);
     });
   }
 
@@ -181,7 +179,7 @@
         return;
       }
 
-      registerReveal(child, Math.min(staggerIndex * 70, 280));
+      registerReveal(child, Math.min(staggerIndex * 50, 220));
       staggerIndex += 1;
     });
   }

@@ -29,7 +29,7 @@ async function init() {
     listEl.innerHTML = '';
 
     if (!latest.length) {
-      statusEl.textContent = 'No tournaments have been published yet.';
+      statusEl.textContent = 'No event records have been published yet.';
       return;
     }
 
@@ -37,10 +37,10 @@ async function init() {
       listEl.appendChild(createTournamentCard(item, { maxBullets: 2 }));
     });
 
-    statusEl.textContent = `Showing latest ${latest.length} tournament(s).`;
+    statusEl.textContent = `Showing latest ${latest.length} event record(s).`;
   } catch (error) {
-    console.error('Failed to load homepage tournaments:', error);
-    statusEl.textContent = 'Unable to load tournament history right now.';
+    console.error('Failed to load homepage competition records:', error);
+    statusEl.textContent = 'Unable to load competition history right now.';
   }
 }
 

@@ -3,10 +3,6 @@ export function validateRoster(players) {
     throw new Error('Roster players must be an array');
   }
   
-  if (players.length === 0) {
-    throw new Error('Roster cannot be empty');
-  }
-  
   players.forEach((player, index) => {
     if (!player.name || typeof player.name !== 'string' || player.name.trim().length === 0) {
       throw new Error(`Player ${index}: name is required and must be a non-empty string`);
@@ -24,6 +20,12 @@ export function validateRoster(players) {
 
     if (player.lineup && !['starter', 'sub'].includes(String(player.lineup).toLowerCase())) {
       throw new Error(`Player ${index} (${player.name}): lineup must be either starter or sub`);
+    }
+
+    if (player.status !== undefined && player.status !== null) {
+      if (typeof player.status !== 'string' || player.status.trim().length === 0) {
+        throw new Error(`Player ${index} (${player.name}): status must be a non-empty string when provided`);
+      }
     }
   });
   

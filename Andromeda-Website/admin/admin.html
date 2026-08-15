@@ -19,9 +19,10 @@
       </div>
       <div class="admin-user">
         <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
-        <a href="../pages/admin-tournaments.html" class="admin-btn admin-btn--secondary">Tournament History</a>
-        <a href="matches.html" class="admin-btn admin-btn--secondary">Matches</a>
-        <a href="scrims.html" class="admin-btn admin-btn--secondary">Match Reports</a>
+        <a href="audit-logs.html" class="admin-btn admin-btn--secondary">Audit Logs</a>
+        <a href="tournaments.html" class="admin-btn admin-btn--secondary">Competition Hub</a>
+        <a href="calendar.html" class="admin-btn admin-btn--secondary">Match Calendar</a>
+        <span class="admin-role-badge" data-admin-role>—</span>
         <span>Signed in as <strong data-admin-email>—</strong></span>
         <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
       </div>
@@ -30,6 +31,8 @@
     <section class="admin-grid admin-grid--two">
       <article class="admin-card" aria-labelledby="roster-heading">
         <h2 id="roster-heading">Edit Team Roster</h2>
+        <p class="admin-page-purpose">Update public roster cards and team profile data. Select a team first, review detected changes, then confirm the save.</p>
+        <p class="admin-public-impact">Public impact: saved roster and team profile changes update public team pages.</p>
 
         <div>
           <label class="admin-label" for="team-select">Select Team</label>
@@ -42,7 +45,7 @@
             <option value="supernova">Supernova</option>
             <option value="void">Void</option>
             <option value="polaris">Polaris</option>
-            <option value="faceit">Andromeda: FACEIT</option>
+            <option value="octantis">Octantis</option>
           </select>
         </div>
 
@@ -55,6 +58,7 @@
                 <th>Player</th>
                 <th>Roles</th>
                 <th>Lineup</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -76,12 +80,29 @@
             </select>
           </div>
 
+          <div>
+            <label class="admin-label" for="player-status">Status</label>
+            <select id="player-status" class="admin-select">
+              <option value="">Unset</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="trial">Trial</option>
+            </select>
+          </div>
+
           <fieldset class="admin-fieldset"></fieldset>
 
           <div class="admin-inline-actions">
             <button id="add-player-btn" class="admin-btn admin-btn--secondary" type="button">Add Player</button>
             <button id="save-roster-btn" class="admin-btn admin-btn--primary" type="button">Save Roster</button>
-            <button id="import-html-btn" class="admin-btn admin-btn--secondary" type="button">Import From Teams HTML</button>
+          </div>
+
+          <div class="admin-help-block" style="margin: 0;">
+            <h3 class="admin-help-block__title">Roster Verification</h3>
+            <p id="roster-verification-status" class="admin-text-muted">Verification status will appear after loading a team.</p>
+            <div class="admin-inline-actions">
+              <button id="verify-roster-btn" class="admin-btn admin-btn--secondary" type="button">Verify Current Roster</button>
+            </div>
           </div>
         </div>
 
@@ -139,6 +160,8 @@
 
       <article class="admin-card" aria-labelledby="trials-heading">
         <h2 id="trials-heading">Trials Queue</h2>
+        <p class="admin-page-purpose">Review trial players, filter the queue, and approve only the players that should be added to a roster.</p>
+        <p class="admin-public-impact">Public impact: approving a trial can add that player to the selected public roster.</p>
 
         <div class="admin-grid admin-grid--two">
           <div>
@@ -152,7 +175,7 @@
               <option value="supernova">Supernova</option>
               <option value="void">Void</option>
               <option value="polaris">Polaris</option>
-              <option value="faceit">Andromeda: FACEIT</option>
+              <option value="octantis">Octantis</option>
             </select>
           </div>
           <div>
@@ -194,7 +217,7 @@
               <option value="supernova">Supernova</option>
               <option value="void">Void</option>
               <option value="polaris">Polaris</option>
-              <option value="faceit">Andromeda: FACEIT</option>
+              <option value="octantis">Octantis</option>
             </select>
           </div>
 
@@ -217,6 +240,19 @@
         </div>
       </article>
     </section>
+
+    <section id="roster-diff-modal" class="admin-modal" hidden aria-labelledby="roster-diff-title" role="dialog" aria-modal="true">
+      <div class="admin-modal__panel">
+        <h2 id="roster-diff-title">Review Changes</h2>
+        <p class="admin-text-muted">Review detected roster changes before saving.</p>
+        <div id="roster-diff-content" class="admin-diff-preview"></div>
+        <div class="admin-inline-actions">
+          <button id="cancel-roster-save-btn" type="button" class="admin-btn admin-btn--secondary">Cancel</button>
+          <button id="confirm-roster-save-btn" type="button" class="admin-btn admin-btn--primary">Confirm Save</button>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <script type="module" src="/js/admin/admin-gate.ui.js"></script>

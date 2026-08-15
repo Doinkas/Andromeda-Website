@@ -82,15 +82,15 @@ export const TEAM_REGISTRY = {
   void: {
     id: 'void',
     name: 'Void',
-    division: 'main',
-    tier: 'Main',
+    division: 'faceit',
+    tier: 'FACEIT',
     region: 'NA',
-    rating: 'Development',
-    summary: 'Development-focused roster working on execution, discipline, and long-term improvement.',
-    description: 'Development-focused roster working on execution, discipline, and long-term improvement.',
+    rating: 'FACEIT Masters',
+    summary: 'FACEIT roster working on execution, discipline, and long-term improvement.',
+    description: 'FACEIT roster working on execution, discipline, and long-term improvement.',
     highlights: ['Execution discipline', 'Role consistency', 'Team synergy'],
     staff: { manager: 'Creep', coaches: 'Express', captain: 'TBD' },
-    achievements: ['Development roster in active growth phase'],
+    achievements: ['FACEIT roster in active growth phase'],
     banner: '/images/teams/banners/void-banner.png',
     logo: '/images/teams/logos/void-logo.png',
     href: 'team.html?team=void'
@@ -111,8 +111,8 @@ export const TEAM_REGISTRY = {
     logo: '/images/teams/logos/polaris-logo.png',
     href: 'team.html?team=polaris'
   },
-  faceit: {
-    id: 'faceit',
+  octantis: {
+    id: 'octantis',
     name: 'Octantis',
     division: 'faceit',
     tier: 'FACEIT',
@@ -125,19 +125,25 @@ export const TEAM_REGISTRY = {
     achievements: ['FACEIT playoff seed'],
     banner: '/images/teams/banners/octantis-banner.png',
     logo: '/images/teams/logos/octantis-logo.png',
-    href: 'team.html?team=faceit'
+    href: 'team.html?team=octantis'
   }
 };
 
 export const TEAM_IDS = Object.keys(TEAM_REGISTRY);
 
+export const TEAM_OPTIONS = TEAM_IDS.map((teamId) => ({
+  id: teamId,
+  name: TEAM_REGISTRY[teamId].name
+}));
+
 export const SCHEDULE_LABEL_TO_TEAM_ID = {
   COMET: 'comet',
-  HORIZON: 'spiral',
+  HORIZON: 'horizon',
+  SPIRAL: 'spiral',
   PROXIMA: 'proxima',
   SUPERNOVA: 'supernova',
   VOID: 'void',
-  FACEIT: 'faceit',
+  FACEIT: 'octantis',
   POLARIS: 'polaris'
 };
 

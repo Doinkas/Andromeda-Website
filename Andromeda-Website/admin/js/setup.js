@@ -55,7 +55,8 @@ addBtn.addEventListener('click', async () => {
     await loadAllowlist();
   } catch (error) {
     console.error('Add to allowlist failed:', error);
-    setStatus(addStatus, 'Failed to add email', true);
+    const message = String(error?.message || '').trim();
+    setStatus(addStatus, message ? `Failed to add email: ${message}` : 'Failed to add email', true);
   } finally {
     addBtn.disabled = false;
   }
@@ -151,7 +152,8 @@ async function loadAllowlist() {
     setStatus(listStatus, `${emails.length} email(s) in allowlist`);
   } catch (error) {
     console.error('Load allowlist failed:', error);
-    setStatus(listStatus, 'Failed to load allowlist', true);
+    const message = String(error?.message || '').trim();
+    setStatus(listStatus, message ? `Failed to load allowlist: ${message}` : 'Failed to load allowlist', true);
   }
 }
 

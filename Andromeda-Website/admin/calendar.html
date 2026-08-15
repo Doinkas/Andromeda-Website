@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Andromeda Admin Calendar</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <style>
+    .calendar-main {
+      max-width: 100%;
+    }
+
+    .calendar-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .calendar-nav button {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+    }
+
+    .calendar-month-label {
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.35rem;
+      margin-bottom: 1rem;
+    }
+
+    .calendar-weekday {
+      font-weight: 600;
+      text-align: center;
+      padding: 0.25rem;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+
+    .calendar-day {
+      min-height: clamp(104px, 8.5vw, 140px);
+      border: 1px solid var(--border-color);
+      border-radius: 0.45rem;
+      padding: 0.35rem;
+      background: var(--bg-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 0.7rem;
+    }
+
+    .calendar-day:hover {
+      background: var(--bg-tertiary);
+      border-color: var(--accent-primary);
+    }
+
+    .calendar-day.other-month {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    .calendar-day.other-month:hover {
+      background: var(--bg-secondary);
+      border-color: var(--border-color);
+    }
+
+    .calendar-day.today {
+      border-color: var(--accent-primary);
+      border-width: 2px;
+      background: rgba(100, 150, 255, 0.08);
+    }
+
+    .calendar-day.selected {
+      border-color: var(--accent-primary);
+      background: rgba(100, 150, 255, 0.14);
+      box-shadow: inset 0 0 0 1px var(--accent-primary);
+    }
+
+    .calendar-day-header {
+      font-weight: 600;
+      line-height: 1;
+      font-size: 0.72rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .calendar-day-event {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 0.18rem 0.25rem;
+      border-radius: 0.25rem;
+      margin-top: 0.12rem;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 0.62rem;
+      line-height: 1.15;
+      transition: all 0.2s;
+    }
+
+    .calendar-day-event:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: var(--accent-primary);
+    }
+
+    .calendar-day-event.win {
+      background: var(--success-color, #4ade80);
+    }
+
+    .calendar-day-event.win:hover {
+      background: var(--success-hover, #22c55e);
+    }
+
+    .calendar-day-event.loss {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    .calendar-day-event.loss:hover {
+      opacity: 0.8;
+    }
+
+    .calendar-day-event.event {
+      background: rgba(139, 92, 246, 0.28);
+      border-color: rgba(139, 92, 246, 0.45);
+    }
+
+    .calendar-day-event.event:hover {
+      background: #7c3aed;
+    }
+
+    .calendar-day-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.15rem;
+      margin-top: auto;
+      padding-top: 0.15rem;
+    }
+
+    .calendar-day-action {
+      border: 1px solid var(--border-color);
+      border-radius: 0.2rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 0.55rem;
+      font-weight: 700;
+      line-height: 1;
+      min-height: 1.15rem;
+      padding: 0.2rem 0.1rem;
+      text-align: center;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .calendar-day-action:hover {
+      border-color: var(--accent-primary);
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .calendar-day-detail {
+      border: 1px solid var(--border-color);
+      border-radius: 0.6rem;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.9rem;
+      margin: 0 0 1rem;
+    }
+
+    .calendar-day-detail__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .calendar-day-detail__head h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .calendar-day-detail__list {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .calendar-day-detail__item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.75rem;
+      align-items: center;
+      border: 1px solid var(--border-color);
+      border-radius: 0.45rem;
+      background: var(--bg-secondary);
+      padding: 0.65rem 0.75rem;
+    }
+
+    .calendar-day-detail__item strong {
+      display: block;
+      color: var(--text-primary);
+      margin-bottom: 0.2rem;
+    }
+
+    .calendar-day-detail__item span {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    .calendar-filter {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 0.875rem;
+    }
+
+    .calendar-filter select {
+      padding: 0.375rem 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 0.8rem;
+    }
+
+    .calendar-tabs {
+      display: inline-flex;
+      gap: 0;
+      margin: 1rem 0;
+      flex-wrap: wrap;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      background: var(--bg-secondary);
+    }
+
+    .calendar-tab {
+      flex: 0 1 auto;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      min-width: 0;
+      box-shadow: none;
+    }
+
+    .calendar-tab.active {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+
+    .calendar-tab:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .calendar-panel[hidden] {
+      display: none;
+    }
+
+    .calendar-review-list {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .calendar-review-item {
+      border: 1px solid var(--border-color);
+      border-radius: 0.4rem;
+      background: var(--bg-secondary);
+      padding: 0.65rem 0.75rem;
+    }
+
+    .calendar-review-item strong {
+      display: block;
+      color: var(--text-primary);
+      margin-bottom: 0.2rem;
+    }
+
+    .calendar-review-item span {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    .import-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .import-section h3 {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.9rem;
+    }
+
+    .import-form {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .import-field {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .import-field label {
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+
+    .import-field input,
+    .import-field select,
+    .import-field textarea {
+      padding: 0.375rem 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 0.8rem;
+    }
+
+    .import-field textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: monospace;
+    }
+
+    .import-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .import-status {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.25rem;
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    .import-status.success {
+      background: rgba(74, 222, 128, 0.1);
+      color: var(--success-color, #4ade80);
+    }
+
+    .import-status.error {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--accent-primary-hover);
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+      max-width: 420px;
+      width: 95%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      position: relative;
+      top: auto;
+      left: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.25rem;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .match-form {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .form-group {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 0.375rem 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 0.8rem;
+    }
+
+    .form-group textarea {
+      min-height: 50px;
+      resize: vertical;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .admin-btn {
+      padding: 0.375rem 0.75rem;
+      border: none;
+      border-radius: 0.25rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.8rem;
+      flex: 1;
+      min-width: 80px;
+    }
+
+    .admin-btn--primary {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .admin-btn--primary:hover {
+      background: var(--accent-primary-hover);
+    }
+
+    .admin-btn--secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .admin-btn--secondary:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .admin-btn--danger {
+      background: rgba(255, 255, 255, 0.16);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .admin-btn--danger:hover {
+      opacity: 0.9;
+    }
+
+    .admin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .modal-status {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .modal-status.success {
+      color: var(--success-color, #4ade80);
+    }
+
+    .modal-status.error {
+      color: var(--accent-primary-hover);
+    }
+
+    .form-note {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      line-height: 1.35;
+      margin: -0.25rem 0 0;
+    }
+
+    @media (max-width: 600px) {
+      .calendar-day {
+        font-size: 0.6rem;
+      }
+
+      .calendar-nav {
+        gap: 0.25rem;
+      }
+
+      .calendar-nav button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+      }
+    }
+  </style>
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Calendar</h1>
+          <p class="admin-brand__subtitle">Match & Event Management</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
+        <span class="admin-role-badge" data-admin-role>—</span>
+        <span>Signed in as <strong data-admin-email>—</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section class="admin-card">
+      <h2>Calendar Workspace</h2>
+      <p class="admin-page-purpose">Schedule, import, edit, and complete official matches from one calendar workspace.</p>
+      <p class="admin-public-impact">Public impact: scheduled matches appear on team pages; completed matches move into public match history.</p>
+
+      <div class="calendar-tabs" role="tablist" aria-label="Calendar tools">
+        <button class="admin-btn admin-btn--secondary calendar-tab active" type="button" data-calendar-tab="calendar">Calendar</button>
+        <button class="admin-btn admin-btn--secondary calendar-tab" type="button" data-calendar-tab="import">Import</button>
+        <button class="admin-btn admin-btn--secondary calendar-tab" type="button" data-calendar-tab="events">Events</button>
+        <button class="admin-btn admin-btn--secondary calendar-tab" type="button" data-calendar-tab="matches">Scheduled Matches</button>
+      </div>
+
+      <div class="calendar-panel" data-calendar-panel="import" hidden>
+      <div class="import-section">
+        <h3>📅 Import Tournament</h3>
+        <form class="import-form" id="import-form">
+          <div class="import-field">
+            <label for="schedule-input">Paste Schedule (CSV or HTML)</label>
+            <textarea id="schedule-input" placeholder="Team|Opponent|Date|Time" required></textarea>
+          </div>
+
+          <div class="import-field">
+            <label for="import-event-name">League / Tournament Name</label>
+            <input id="import-event-name" type="text" placeholder="e.g., FACEIT Masters Season 5">
+          </div>
+
+          <div class="form-grid">
+            <div class="import-field">
+              <label for="import-format">Format</label>
+              <select id="import-format" required>
+                <option value="csv">CSV</option>
+                <option value="table">HTML Table</option>
+              </select>
+            </div>
+
+            <div class="import-field">
+              <label for="timezone-offset">Timezone (hrs)</label>
+              <input id="timezone-offset" type="number" value="0" min="-12" max="12" step="1">
+            </div>
+          </div>
+
+          <div class="import-actions">
+            <button type="submit" class="admin-btn admin-btn--primary">Import</button>
+            <button type="reset" class="admin-btn admin-btn--secondary">Clear</button>
+          </div>
+
+          <div id="import-status" class="import-status" hidden></div>
+        </form>
+      </div>
+      </div>
+
+      <div class="calendar-panel" data-calendar-panel="calendar">
+      <div class="calendar-filter">
+        <label>Filter: 
+          <select id="calendar-team-filter">
+            <option value="">All Teams</option>
+            <option value="horizon">Horizon</option>
+            <option value="spiral">Spiral</option>
+            <option value="proxima">Proxima</option>
+            <option value="comet">Comet</option>
+            <option value="supernova">Supernova</option>
+            <option value="void">Void</option>
+            <option value="polaris">Polaris</option>
+            <option value="octantis">Octantis</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="calendar-nav">
+        <button id="calendar-prev" class="admin-btn admin-btn--secondary">← Prev</button>
+        <div id="calendar-month-label" class="calendar-month-label">Loading...</div>
+        <button id="calendar-next" class="admin-btn admin-btn--secondary">Next →</button>
+      </div>
+
+      <div class="calendar-grid" id="calendar-grid"></div>
+
+      <section class="calendar-day-detail" id="calendar-day-detail" aria-live="polite">
+        <div class="calendar-day-detail__head">
+          <h3 id="calendar-day-detail-title">Select a date</h3>
+          <div class="calendar-day-actions">
+            <button id="calendar-detail-add-match" type="button" class="calendar-day-action">+ Match</button>
+            <button id="calendar-detail-add-event" type="button" class="calendar-day-action">+ Event</button>
+          </div>
+        </div>
+        <div id="calendar-day-detail-list" class="calendar-day-detail__list">
+          <p class="admin-text-muted">Click a date to see that day's matches and events.</p>
+        </div>
+      </section>
+
+      <div id="calendar-status" class="admin-text-muted" style="text-align: center; font-size: 0.85rem;"></div>
+      </div>
+
+      <div class="calendar-panel" data-calendar-panel="events" hidden>
+        <h3>Events</h3>
+        <p class="admin-page-purpose">Review saved event reminders. Click an event in the calendar grid to edit or delete it.</p>
+        <div id="calendar-events-list" class="calendar-review-list"></div>
+      </div>
+
+      <div class="calendar-panel" data-calendar-panel="matches" hidden>
+        <h3>Scheduled Matches</h3>
+        <p class="admin-page-purpose">Review scheduled official matches. Click a match in the calendar grid to edit or delete it.</p>
+        <div id="calendar-matches-list" class="calendar-review-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="match-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-match-title">Add Item</h2>
+        <button type="button" class="modal-close" id="modal-close">&times;</button>
+      </div>
+
+      <form class="match-form" id="match-edit-form">
+        <input id="modal-match-id" type="hidden">
+        
+        <div class="form-group">
+          <label for="modal-type">Type</label>
+          <select id="modal-type" required>
+            <option value="match">Match</option>
+            <option value="event">Event</option>
+          </select>
+        </div>
+
+        <!-- Match fields -->
+        <div id="match-fields">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="modal-team">Team</label>
+              <select id="modal-team" required>
+                <option value="">Select team</option>
+                <option value="horizon">Horizon</option>
+                <option value="spiral">Spiral</option>
+                <option value="proxima">Proxima</option>
+                <option value="comet">Comet</option>
+                <option value="supernova">Supernova</option>
+                <option value="void">Void</option>
+                <option value="polaris">Polaris</option>
+                <option value="octantis">Octantis</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modal-opponent">Opponent</label>
+              <input id="modal-opponent" type="text" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="modal-match-event-name">League / Tournament</label>
+            <input id="modal-match-event-name" type="text" placeholder="e.g., FACEIT Masters Season 5">
+          </div>
+
+          <div class="form-group">
+            <label for="modal-stream-url">Stream URL</label>
+            <input id="modal-stream-url" type="url" placeholder="https://twitch.tv/...">
+          </div>
+
+          <div class="form-grid match-report-only">
+            <div class="form-group">
+              <label for="modal-result">Result</label>
+              <select id="modal-result">
+                <option value="">Pending</option>
+                <option value="W">Win</option>
+                <option value="L">Loss</option>
+                <option value="D">Draw</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="modal-score">Score</label>
+              <input id="modal-score" type="text" placeholder="13-5">
+            </div>
+          </div>
+
+          <div class="form-group match-report-only">
+            <label for="modal-maps">Maps Played</label>
+            <input id="modal-maps" type="text" placeholder="Lijiang Tower, King's Row, Circuit Royal">
+          </div>
+
+          <div class="form-group match-report-only">
+            <label for="modal-replay-code">Replay Code</label>
+            <input id="modal-replay-code" type="text" placeholder="ABC123D456E">
+          </div>
+
+          <div class="form-group match-report-only">
+            <label for="modal-notes">Notes</label>
+            <textarea id="modal-notes" placeholder="..."></textarea>
+          </div>
+
+          <div class="form-group match-report-only">
+            <label for="modal-screenshots">Screenshots</label>
+            <input id="modal-screenshots" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" multiple>
+            <p class="form-note" id="modal-screenshot-note">Optional proof images, max 5MB each.</p>
+          </div>
+
+          <p class="form-note">Leave result fields blank for upcoming matches. Add result details after the match is played.</p>
+        </div>
+
+        <!-- Event fields -->
+        <div id="event-fields" style="display: none;">
+          <div class="form-group">
+            <label for="modal-event-name">Event Name</label>
+            <input id="modal-event-name" type="text" placeholder="e.g., Stream, Announcement" required>
+          </div>
+
+          <div class="form-group">
+            <label for="modal-event-description">Description</label>
+            <textarea id="modal-event-description" placeholder="What is this about?" style="min-height: 40px;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="modal-event-link">Link</label>
+            <input id="modal-event-link" type="url" placeholder="https://...">
+          </div>
+
+          <div class="form-group">
+            <label for="modal-event-notes">Social Notes</label>
+            <textarea id="modal-event-notes" placeholder="#hashtags #calltoaction" style="min-height: 40px;"></textarea>
+          </div>
+        </div>
+
+        <!-- Common fields -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="modal-date">Date</label>
+            <input id="modal-date" type="date" required>
+          </div>
+          <div class="form-group">
+            <label for="modal-time">Time (EST)</label>
+            <input id="modal-time" type="time" required>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="admin-btn admin-btn--primary">Save</button>
+          <button type="button" class="admin-btn admin-btn--secondary" id="modal-cancel">Cancel</button>
+          <button type="button" class="admin-btn admin-btn--danger" id="modal-delete">Delete</button>
+        </div>
+
+        <div id="modal-status" class="modal-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="/admin/js/admin-calendar.js"></script>
+</body>
+</html>

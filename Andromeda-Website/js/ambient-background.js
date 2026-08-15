@@ -2,17 +2,103 @@
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const reducedMotion = prefersReducedMotion.matches;
 
-  const microStarCount = reducedMotion ? 130 : 270;
-  const standardStarCount = reducedMotion ? 60 : 122;
-  const fieldMicroStarCount = reducedMotion ? 58 : 122;
-  const fieldStandardStarCount = reducedMotion ? 24 : 50;
-  const scatterMicroStarCount = reducedMotion ? 66 : 142;
-  const scatterStandardStarCount = reducedMotion ? 24 : 48;
-  const galaxyBandStarCount = reducedMotion ? 20 : 36;
-  const anchorStarCount = reducedMotion ? 10 : 18;
-  const heroAnchorStarCount = reducedMotion ? 3 : 6;
-  const parallaxStrength = reducedMotion ? 1.1 : 4.8;
-  const dustParticleCount = reducedMotion ? 36 : 84;
+  function resolveAmbientPresetName() {
+    const path = window.location.pathname.toLowerCase();
+    if (path === '/' || path.endsWith('/index.html')) return 'home';
+    if (path.endsWith('/team.html')) return 'team';
+    if (path.includes('/teams/') && !path.endsWith('/teams.html')) return 'team';
+    if (path.includes('teams')) return 'teams';
+    if (path.includes('contact') || path.includes('about')) return 'about';
+    if (path.includes('schedule') || path.includes('tournament')) return 'schedule';
+    return 'default';
+  }
+
+  const ambientPresetName = resolveAmbientPresetName();
+  const ambientPresets = {
+    default: {
+      starScale: 1.04,
+      anchorScale: 1,
+      dustScale: 1,
+      nebulaScale: 1,
+      parallaxScale: 0.9,
+      planetAlpha: 0.9,
+      shootingStars: true,
+      satellite: true,
+      astronaut: true
+    },
+    home: {
+      starScale: 1.18,
+      anchorScale: 1.22,
+      dustScale: 1.12,
+      nebulaScale: 1.15,
+      parallaxScale: 1,
+      planetAlpha: 1,
+      shootingStars: true,
+      satellite: true,
+      astronaut: true
+    },
+    teams: {
+      starScale: 1.1,
+      anchorScale: 1.08,
+      dustScale: 0.95,
+      nebulaScale: 1.02,
+      parallaxScale: 0.82,
+      planetAlpha: 0.82,
+      shootingStars: true,
+      satellite: true,
+      astronaut: false
+    },
+    team: {
+      starScale: 1.02,
+      anchorScale: 0.94,
+      dustScale: 0.82,
+      nebulaScale: 0.84,
+      parallaxScale: 0.64,
+      planetAlpha: 0.76,
+      shootingStars: true,
+      satellite: false,
+      astronaut: false
+    },
+    about: {
+      starScale: 0.98,
+      anchorScale: 0.9,
+      dustScale: 0.84,
+      nebulaScale: 0.88,
+      parallaxScale: 0.68,
+      planetAlpha: 0.7,
+      shootingStars: true,
+      satellite: false,
+      astronaut: true
+    },
+    schedule: {
+      starScale: 0.9,
+      anchorScale: 0.82,
+      dustScale: 0.78,
+      nebulaScale: 0.72,
+      parallaxScale: 0.56,
+      planetAlpha: 0.58,
+      shootingStars: false,
+      satellite: false,
+      astronaut: false
+    }
+  };
+  const ambientConfig = ambientPresets[ambientPresetName] || ambientPresets.default;
+
+  function scaleCount(count, scale) {
+    return Math.max(1, Math.round(count * scale));
+  }
+
+  const microStarCount = scaleCount(reducedMotion ? 130 : 270, ambientConfig.starScale);
+  const standardStarCount = scaleCount(reducedMotion ? 60 : 122, ambientConfig.starScale);
+  const fieldMicroStarCount = scaleCount(reducedMotion ? 58 : 122, ambientConfig.starScale);
+  const fieldStandardStarCount = scaleCount(reducedMotion ? 24 : 50, ambientConfig.starScale);
+  const scatterMicroStarCount = scaleCount(reducedMotion ? 66 : 142, ambientConfig.starScale);
+  const scatterStandardStarCount = scaleCount(reducedMotion ? 24 : 48, ambientConfig.starScale);
+  const galaxyBandStarCount = scaleCount(reducedMotion ? 20 : 36, ambientConfig.starScale);
+  const anchorStarCount = scaleCount(reducedMotion ? 10 : 18, ambientConfig.anchorScale);
+  const heroAnchorStarCount = scaleCount(reducedMotion ? 3 : 6, ambientConfig.anchorScale);
+  const parallaxStrength = (reducedMotion ? 1.1 : 4.8) * ambientConfig.parallaxScale;
+  const dustParticleCount = scaleCount(reducedMotion ? 36 : 84, ambientConfig.dustScale);
   const starPopBoost = reducedMotion ? 1.05 : 1.24;
   const starGlowBoost = reducedMotion ? 1.06 : 1.22;
   const starGlintBoost = reducedMotion ? 1.06 : 1.16;
@@ -22,6 +108,7 @@
   const layer = document.createElement('div');
   layer.className = 'ambient-space-bg';
   layer.setAttribute('aria-hidden', 'true');
+  document.body.dataset.ambientPreset = ambientPresetName;
 
   const canvas = document.createElement('canvas');
   canvas.className = 'ambient-space-canvas';
@@ -808,16 +895,29 @@
   }
 
   function findPointOutsideTextSafe(generator, allowInside) {
+    const fallbackPoint = {
+      x: state.width * 0.5,
+      y: state.height * 0.5
+    };
+
     if (allowInside) {
-      return generator();
+      return generator() || fallbackPoint;
     }
 
-    let point = generator();
-    for (let i = 0; i < 8 && isInTextSafeZone(point.x, point.y); i += 1) {
-      point = generator();
+    let point = generator() || fallbackPoint;
+    for (let i = 0; i < 8; i += 1) {
+      if (!point || typeof point.x !== 'number' || typeof point.y !== 'number') {
+        point = fallbackPoint;
+      }
+
+      if (!isInTextSafeZone(point.x, point.y)) {
+        break;
+      }
+
+      point = generator() || fallbackPoint;
     }
 
-    return point;
+    return point || fallbackPoint;
   }
 
   function samplePointByDensity(spawnArea, biasPower) {
@@ -1501,14 +1601,21 @@
       const boostedAlpha = alpha * (1 + heroInfluence * heroAlphaBoost);
       const boostedRadius = s.radius * depthRadiusScale * (1 + heroInfluence * heroRadiusBoost);
       const clampedAlpha = Math.max(0.02, Math.min(boostedAlpha, 0.78));
+      const safeRadius = Number.isFinite(boostedRadius) ? Math.max(0.1, boostedRadius) : null;
+
+      if (!Number.isFinite(px) || !Number.isFinite(py) || safeRadius === null) {
+        continue;
+      }
 
       if (s.halo) {
-        const g = ctx.createRadialGradient(px, py, 0, px, py, boostedRadius + s.haloRadius);
+        const haloRadius = Number.isFinite(s.haloRadius) ? s.haloRadius : 0;
+        const outerRadius = safeRadius + haloRadius;
+        const g = ctx.createRadialGradient(px, py, 0, px, py, outerRadius);
         const haloColor = s.haloColor || s.color;
         g.addColorStop(0, `rgba(${haloColor}, ${Math.min(clampedAlpha * 0.56, 0.34)})`);
         g.addColorStop(1, `rgba(${haloColor}, 0)`);
         ctx.beginPath();
-        ctx.arc(px, py, boostedRadius + s.haloRadius, 0, Math.PI * 2);
+        ctx.arc(px, py, outerRadius, 0, Math.PI * 2);
         ctx.fillStyle = g;
         ctx.fill();
       }
@@ -1615,7 +1722,7 @@
       const tx = (bx - textSafeCx) / (textSafeRx * 1.24);
       const ty = (by - textSafeCy) / (textSafeRy * 1.18);
       const textSafeInfluence = Math.exp(-(tx * tx + ty * ty));
-      const alpha = blob.alpha * (1 - textSafeInfluence * 0.42);
+      const alpha = blob.alpha * ambientConfig.nebulaScale * (1 - textSafeInfluence * 0.42);
 
       ctx.save();
       ctx.translate(bx, by);
@@ -1656,7 +1763,7 @@
       ctx.globalCompositeOperation = 'soft-light';
       ctx.translate(Math.sin(now * 0.00005) * 6 * motionScale, Math.cos(now * 0.00004) * 5 * motionScale);
       ctx.fillStyle = grainPattern;
-      ctx.globalAlpha = reducedMotion ? 0.05 : 0.085;
+      ctx.globalAlpha = (reducedMotion ? 0.05 : 0.085) * ambientConfig.nebulaScale;
       ctx.fillRect(-18, -18, w + 36, h + 36);
       ctx.restore();
     }
@@ -1964,6 +2071,9 @@
   function drawRingedPlanet() {
     const p = state.ringedPlanet;
     if (!p) return;
+    ctx.save();
+    ctx.globalAlpha *= ambientConfig.planetAlpha;
+
     const now = performance.now();
 
     const base = Math.min(state.width, state.height);
@@ -2000,7 +2110,7 @@
 
     // Thin atmosphere glow.
     const atmo = ctx.createRadialGradient(px, py, radius * 0.86, px, py, radius * 1.34);
-    atmo.addColorStop(0, 'rgba(190,210,255,0.11)');
+    atmo.addColorStop(0, 'rgba(190,210,255,0.08)');
     atmo.addColorStop(1, 'rgba(190,210,255,0)');
     ctx.beginPath();
     ctx.arc(px, py, radius * 1.34, 0, Math.PI * 2);
@@ -2041,6 +2151,7 @@
     ctx.ellipse(0, 0, ringRx * 0.93, ringRy * 0.93, 0, shimmerPhase + 0.9, shimmerPhase + 0.9 + shimmerSpan * 0.75, false);
     ctx.stroke();
     ctx.restore();
+    ctx.restore();
   }
 
   function drawParticles() {
@@ -2055,7 +2166,9 @@
     state.pointerX += (state.targetX - state.pointerX) * 0.04;
     state.pointerY += (state.targetY - state.pointerY) * 0.04;
 
-    drawRingedPlanet();
+    if (ambientConfig.planetAlpha > 0) {
+      drawRingedPlanet();
+    }
     drawDustLayer();
 
     drawLayer(state.microStars, 0.28, { heroAlphaBoost: 0.2, heroRadiusBoost: 0.03 });
@@ -2069,10 +2182,18 @@
     drawLayer(state.heroAnchorStars, 0.92, { heroAlphaBoost: 0.34, heroRadiusBoost: 0.1 });
 
     if (!reducedMotion) {
-      drawShootingTrails();
-      drawShootingStar();
-      drawSatellitePass();
-      drawAstronautPass();
+      if (ambientConfig.shootingStars) {
+        drawShootingTrails();
+        drawShootingStar();
+      }
+
+      if (ambientConfig.satellite) {
+        drawSatellitePass();
+      }
+
+      if (ambientConfig.astronaut) {
+        drawAstronautPass();
+      }
     }
   }
 

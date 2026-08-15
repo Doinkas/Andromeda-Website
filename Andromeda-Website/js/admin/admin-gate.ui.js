@@ -85,8 +85,31 @@ function setSignedInEmail(email) {
   });
 }
 
-function showAuthorizedApp(user) {
+function applyRoleScope(authz = null) {
+  const role = String(authz?.role || '').trim().toLowerCase() || 'viewer';
+
+  document.querySelectorAll('[data-admin-role]').forEach((el) => {
+    el.textContent = role === 'admin' ? 'Admin' : role === 'captain' ? 'Captain' : 'Viewer';
+  });
+
+  document.querySelectorAll('[data-admin-visible]').forEach((el) => {
+    const allowed = String(el.getAttribute('data-admin-visible') || '')
+      .split(',')
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean);
+
+    if (!allowed.length) {
+      el.hidden = false;
+      return;
+    }
+
+    el.hidden = !allowed.includes(role);
+  });
+}
+
+function showAuthorizedApp(user, authz = null) {
   setSignedInEmail(user?.email || '');
+  applyRoleScope(authz);
   bindTopbarActions();
 
   if (appShell) {
@@ -98,7 +121,10 @@ function showAuthorizedApp(user) {
     new CustomEvent('admin:authorized', {
       detail: {
         user,
-        email: String(user?.email || '').toLowerCase().trim()
+        email: String(user?.email || '').toLowerCase().trim(),
+        role: String(authz?.role || '').trim().toLowerCase() || null,
+        allowlisted: authz?.allowlisted === true,
+        captainByClaims: authz?.captainByClaims === true
       }
     })
   );
@@ -151,11 +177,11 @@ onAdminAuthState(async (user) => {
 
   try {
     const email = String(user.email || '').trim().toLowerCase();
-    await requireAdminOrCaptain();
+    const authz = await requireAdminOrCaptain();
 
     if (checkToken !== inFlightCheck) return;
 
-    showAuthorizedApp(user);
+    showAuthorizedApp(user, authz);
   } catch (error) {
     if (checkToken !== inFlightCheck) return;
     console.error('Authorization check failed:', error);

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homepage Media Hub - Andromeda Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Andromeda Admin</h1>
+          <p class="admin-brand__subtitle">Newsroom Publishing Desk</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
+        <span class="admin-role-badge" data-admin-role>-</span>
+        <span>Signed in as <strong data-admin-email>-</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section class="admin-card">
+      <h2>Homepage Media Hub</h2>
+      <p class="admin-page-purpose">Run the homepage carousel like a newsroom desk: pick a panel, update the story, attach media, and review the live preview before publishing.</p>
+      <p class="admin-public-impact">Public impact: saved changes update the homepage carousel visitors see.</p>
+      <p class="admin-text-muted">
+        This is the media team's home base for homepage headlines, feature images, video links, and call-to-action buttons.
+      </p>
+
+      <div class="admin-help-block" aria-label="Quick start guide">
+        <h3 class="admin-help-block__title">Quick Start (Non-Technical)</h3>
+        <ol class="admin-help-block__list">
+          <li>Choose the panel you want to update from the left rail.</li>
+          <li>Edit copy, upload or paste a feature image, and add any useful links.</li>
+          <li>Check the preview, then click <strong>Publish Carousel</strong>.</li>
+        </ol>
+      </div>
+
+      <div class="admin-inline-actions" style="margin: 10px 0 6px;">
+        <button id="load-media-hub-btn" class="admin-btn admin-btn--secondary" type="button">Load Live</button>
+        <button id="apply-starter-copy-btn" class="admin-btn admin-btn--secondary" type="button">Use Starter Copy</button>
+        <button id="reset-media-hub-btn" class="admin-btn admin-btn--secondary" type="button">Reset Draft</button>
+        <button id="save-media-hub-btn" class="admin-btn admin-btn--primary" type="button">Publish Carousel</button>
+      </div>
+
+      <p id="media-hub-message" class="admin-status admin-text-muted" role="status" aria-live="polite">Sign in to edit homepage content.</p>
+      <div class="media-hub-workspace" aria-label="Media hub editor">
+        <aside class="media-hub-panel-list" id="media-hub-panel-list" aria-label="Carousel panels"></aside>
+
+        <form id="media-hub-editor" class="media-hub-editor" novalidate>
+          <section class="media-hub-editor__section">
+            <h3>Story Copy</h3>
+            <div class="media-hub-field-grid">
+              <label class="admin-label">Tab Label
+                <input id="media-tab-label" class="admin-input" type="text" autocomplete="off">
+              </label>
+              <label class="admin-label">Badge
+                <input id="media-badge" class="admin-input" type="text" autocomplete="off">
+              </label>
+            </div>
+            <label class="admin-label">Headline
+              <input id="media-title" class="admin-input" type="text" autocomplete="off">
+            </label>
+            <label class="admin-label">Description
+              <textarea id="media-description" class="admin-textarea" rows="4"></textarea>
+            </label>
+            <label class="admin-label">Bullet Points
+              <textarea id="media-bullets" class="admin-textarea" rows="5" placeholder="One bullet per line"></textarea>
+            </label>
+          </section>
+
+          <section class="media-hub-editor__section">
+            <h3>Feature Media</h3>
+            <p class="admin-text-muted">Use images for the homepage carousel. Host longer videos on YouTube, Twitch, TikTok, or another public platform and paste the link below.</p>
+            <label class="admin-label">Feature Image URL
+              <input id="media-image-url" class="admin-input" type="text" autocomplete="off" placeholder="Paste an image URL or upload below">
+            </label>
+            <label class="admin-label">Image Alt Text
+              <input id="media-image-alt" class="admin-input" type="text" autocomplete="off" placeholder="Short description for accessibility">
+            </label>
+            <div class="media-hub-upload-row">
+              <input id="media-image-file" class="admin-input" type="file" accept="image/png,image/jpeg,image/webp">
+              <button id="media-upload-btn" class="admin-btn admin-btn--secondary" type="button">Upload Image</button>
+              <button id="media-clear-image-btn" class="admin-btn admin-btn--secondary" type="button">Clear Image</button>
+            </div>
+            <label class="admin-label">Video / Post Link
+              <input id="media-video-url" class="admin-input" type="text" autocomplete="off" placeholder="Optional YouTube, Twitch, TikTok, or post URL">
+            </label>
+          </section>
+
+          <section class="media-hub-editor__section">
+            <div class="media-hub-editor__section-heading">
+              <h3>Buttons</h3>
+              <button id="media-add-link-btn" class="admin-btn admin-btn--secondary" type="button">Add Link</button>
+            </div>
+            <div id="media-actions-list" class="media-hub-actions-list"></div>
+          </section>
+        </form>
+
+        <aside class="media-hub-preview-shell" aria-label="Selected panel preview">
+          <h3>Live Preview</h3>
+          <div id="media-hub-preview" class="media-hub-preview media-hub-preview--large"></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="js/media-hub.js"></script>
+</body>
+</html>

@@ -124,12 +124,17 @@ export async function listPublishedTournaments(limit = 50) {
   const q = query(
     tournamentsRef,
     where('isPublished', '==', true),
-    orderBy('startDate', 'desc'),
     fbLimit(safeLimit)
   );
 
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+  return snapshot.docs
+    .map((item) => ({ id: item.id, ...item.data() }))
+    .sort((a, b) => {
+      const aDate = a?.startDate?.toDate ? a.startDate.toDate().getTime() : new Date(a?.startDate || 0).getTime();
+      const bDate = b?.startDate?.toDate ? b.startDate.toDate().getTime() : new Date(b?.startDate || 0).getTime();
+      return bDate - aDate;
+    });
 }
 
 export async function listAllTournamentsForAdmin(limit = 200) {

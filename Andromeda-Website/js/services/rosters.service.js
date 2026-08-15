@@ -1,7 +1,16 @@
 import { db } from '/js/core/firebase.js';
-import { collection, doc, getDoc, getDocs, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+import { collection, doc, getDoc, getDocs, runTransaction, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 import { validateRoster } from './validation.service.js';
-import { buildAuditPayload, writeAuditInTransaction } from './audit.service.js';
+import { logAudit } from './audit.service.js';
+
+const LEGACY_ROSTER_ID_MAP = {
+  faceit: 'octantis'
+};
+
+function resolveRosterId(teamId) {
+  const normalizedTeamId = String(teamId || '').trim().toLowerCase();
+  return LEGACY_ROSTER_ID_MAP[normalizedTeamId] || normalizedTeamId;
+}
 
 function normalizeRoles(roles, role) {
   if (Array.isArray(roles)) {
@@ -44,14 +53,13 @@ function normalizePlayers(players) {
       const name = String(player?.name || '').trim();
       const roles = normalizeRoles(player?.roles, player?.role);
       const lineup = normalizeLineup(player?.lineup, index);
-      const normalized = { name, roles, lineup };
-
-      // Preserve profile field if present
-      if (player?.profile && typeof player.profile === 'object') {
-        normalized.profile = player.profile;
-      }
-
-      return normalized;
+      const status = String(player?.status || '').trim();
+      return {
+        name,
+        roles,
+        lineup,
+        ...(status ? { status } : {})
+      };
     })
     .filter((player) => player.name.length > 0);
 }
@@ -90,47 +98,81 @@ function normalizeTeamProfile(profile) {
 }
 
 export async function getRoster(teamId) {
-  const rosterRef = doc(db, 'rosters', teamId);
+  const rosterId = resolveRosterId(teamId);
+  const rosterRef = doc(db, 'rosters', rosterId);
   const rosterSnap = await getDoc(rosterRef);
 
   if (!rosterSnap.exists()) {
-    return { players: [] };
+    if (rosterId !== 'octantis') {
+      return { players: [] };
+    }
+
+    const legacySnap = await getDoc(doc(db, 'rosters', 'faceit'));
+    if (!legacySnap.exists()) {
+      return { players: [] };
+    }
+
+    const legacyData = legacySnap.data() || {};
+    return {
+      ...legacyData,
+      players: normalizePlayers(legacyData.players)
+    };
   }
 
   const data = rosterSnap.data() || {};
   return {
     ...data,
-    players: normalizePlayers(data.players)
+    players: normalizePlayers(data.players),
+    verifiedAt: data.verifiedAt || null,
+    verifiedBy: data.verifiedBy || null,
+    needsReview: data.needsReview === true
   };
 }
 
 export async function listRosterTeams() {
   const snap = await getDocs(collection(db, 'rosters'));
-  return snap.docs.map((docSnap) => {
+  const teams = new Map();
+
+  snap.docs.forEach((docSnap) => {
     const data = docSnap.data() || {};
-    return {
-      teamId: docSnap.id,
-      teamName: String(data.teamName || data.name || docSnap.id).trim()
-    };
+    const resolvedTeamId = resolveRosterId(docSnap.id);
+    const resolvedTeamName = String(data.teamName || data.name || resolvedTeamId).trim();
+
+    if (!teams.has(resolvedTeamId)) {
+      teams.set(resolvedTeamId, {
+        teamId: resolvedTeamId,
+        teamName: resolvedTeamName
+      });
+    }
   });
+
+  return Array.from(teams.values());
 }
 
-export async function saveRoster(teamId, players, lastModifiedByEmail, teamProfile = null) {
-  const rosterRef = doc(db, 'rosters', teamId);
+export async function saveRoster(teamId, players, lastModifiedByEmail, teamProfile = null, options = {}) {
+  const rosterId = resolveRosterId(teamId);
+  const rosterRef = doc(db, 'rosters', rosterId);
+  const legacyRosterRef = rosterId === 'octantis' ? doc(db, 'rosters', 'faceit') : null;
   const normalizedPlayers = normalizePlayers(players);
   const normalizedTeamProfile = normalizeTeamProfile(teamProfile);
+  const markNeedsReview = options.markNeedsReview !== false;
+  const diffSummary = options.diffSummary || null;
+  const auditAction = String(options.auditAction || 'roster_update');
+  let beforeData = null;
   
   // Validate roster before saving
   validateRoster(normalizedPlayers);
 
   await runTransaction(db, async (tx) => {
     const beforeSnap = await tx.get(rosterRef);
-    const beforeData = beforeSnap.exists() ? beforeSnap.data() : null;
+    beforeData = beforeSnap.exists() ? beforeSnap.data() : null;
+    const legacySnap = legacyRosterRef ? await tx.get(legacyRosterRef) : null;
 
     const nextRosterData = {
       players: normalizedPlayers,
       updatedAt: serverTimestamp(),
-      lastModifiedBy: lastModifiedByEmail || null
+      lastModifiedBy: lastModifiedByEmail || null,
+      needsReview: markNeedsReview
     };
 
     if (normalizedTeamProfile) {
@@ -139,21 +181,59 @@ export async function saveRoster(teamId, players, lastModifiedByEmail, teamProfi
 
     tx.set(rosterRef, nextRosterData, { merge: true });
 
-    const auditPayload = buildAuditPayload({
-      action: 'roster_update',
-      targetCollection: 'rosters',
-      targetId: teamId,
+    if (legacyRosterRef && legacySnap?.exists()) {
+      tx.delete(legacyRosterRef);
+    }
+  });
+
+  // Keep roster writes resilient even if audit rules differ across environments.
+  try {
+    await logAudit({
+      action: auditAction,
+      entityType: 'rosters',
+      entityId: rosterId,
       performedBy: lastModifiedByEmail || null,
-      before: beforeData,
-      after: {
-        ...beforeData,
-        ...nextRosterData
-      },
       meta: {
-        playerCount: normalizedPlayers.length
+        teamId: rosterId,
+        playerCount: normalizedPlayers.length,
+        previousPlayerCount: Array.isArray(beforeData?.players) ? beforeData.players.length : 0,
+        needsReview: markNeedsReview,
+        diffSummary
       }
     });
+  } catch (error) {
+    console.warn('Roster saved but audit logging failed:', error);
+  }
+}
 
-    writeAuditInTransaction(tx, auditPayload);
-  });
+export async function verifyRoster(teamId, verifiedByEmail) {
+  const rosterId = resolveRosterId(teamId);
+  const rosterRef = doc(db, 'rosters', rosterId);
+
+  await setDoc(
+    rosterRef,
+    {
+      verifiedAt: serverTimestamp(),
+      verifiedBy: verifiedByEmail || null,
+      needsReview: false,
+      updatedAt: serverTimestamp(),
+      lastModifiedBy: verifiedByEmail || null
+    },
+    { merge: true }
+  );
+
+  try {
+    await logAudit({
+      action: 'roster_verify',
+      entityType: 'rosters',
+      entityId: rosterId,
+      performedBy: verifiedByEmail || null,
+      meta: {
+        teamId: rosterId,
+        needsReview: false
+      }
+    });
+  } catch (error) {
+    console.warn('Roster verified but audit logging failed:', error);
+  }
 }

@@ -50,9 +50,14 @@ export async function requireAdminOrCaptain() {
     throw new Error('You are not authorized to submit match reports.');
   }
 
+  const role = allowlisted ? 'admin' : 'captain';
+
   return {
     user,
     email,
+    role,
+    isAdmin: allowlisted,
+    isCaptain: captainByClaims,
     allowlisted,
     captainByClaims
   };

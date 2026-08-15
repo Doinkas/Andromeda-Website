@@ -87,10 +87,11 @@ export function createTournamentCard(tournament, { maxBullets = 2 } = {}) {
       <span class="tournament-card__game">${escapeHtml(tournament?.game || 'Unknown game')}</span>
     </header>
     <p class="tournament-card__meta">${escapeHtml(formatDateRange(tournament?.startDate, tournament?.endDate))}</p>
-    <p class="tournament-card__record">Record: <strong>${safeWins}W-${safeLosses}L</strong>${placement ? ` • ${escapeHtml(placement)}` : ''}</p>
+    <p class="tournament-card__record">Record: <strong>${safeWins}W-${safeLosses}L</strong>${placement ? ` | ${escapeHtml(placement)}` : ''}</p>
     ${bullets.length ? `<ul class="tournament-card__bullets">${bullets.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
     ${link ? `<p><a href="${escapeHtml(link)}" target="_blank" rel="noopener">External Link</a></p>` : ''}
   `;
 
   return card;
 }
+

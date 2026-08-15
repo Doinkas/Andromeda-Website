@@ -1,10 +1,17 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Explore Andromeda Esports teams across divisions and view active rosters competing under the organization.">
+  <meta name="theme-color" content="#05070B">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Andromeda Teams">
+  <meta property="og:description" content="Browse Andromeda divisions and active competitive rosters.">
+  <meta property="og:image" content="/images/branding/andro-org.png">
   <script>window.__andromedaMotionFallback=window.setTimeout(function(){document.documentElement.classList.remove('js-motion');},2500);document.documentElement.classList.add('js-motion');</script>
   <title>Andromeda Teams</title>
+  <link rel="icon" href="/images/branding/andro-org.png" type="image/png">
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -17,9 +24,9 @@
       </a>
       <a href="teams.html">Teams</a>
       <a href="schedule.html">Schedule</a>
-      <a href="scrims.html">Matches</a>
+      <a href="tournaments.html">Competition</a>
       <a href="merch.html">Merch</a>
-      <a href="contact.html">Contact</a>
+      <a href="contact.html">About</a>
     </nav>
   </header>
 
@@ -28,195 +35,33 @@
       <div class="teams-hero__inner container">
         <img class="teams-hero__brand page-header-item" src="/images/branding/andro-org.png" alt="Andromeda Esports brand logo">
         <h1 class="teams-hero__title page-header-item">Teams</h1>
-        <p class="teams-hero__sub page-header-item">Select a division to explore the rosters competing under Andromeda Esports.</p>
+        <p class="teams-hero__sub page-header-item">Explore every active Andromeda roster across Main and FACEIT competition.</p>
       </div>
     </section>
 
-    <div class="teams-accordion container section section-shell section-band section-band--base" data-module="teams-accordion">
+    <section class="teams-directory container section section-shell section-band section-band--base" data-module="teams-directory" aria-labelledby="teams-directory-heading">
       <div class="section-inner">
-      <div class="section-head">
-        <p class="section-kicker">Divisions</p>
-        <h2>Competitive Structure</h2>
-        <p class="lead">Explore each division and open the panels to view active rosters.</p>
-      </div>
-      <div class="section-divider" aria-hidden="true"></div>
-      <div class="section-body">
-
-      <!-- MAIN DIVISION -->
-      <div class="division-panel">
-        <button
-          type="button"
-          class="division-panel__trigger"
-          aria-expanded="false"
-          aria-controls="panel-main-body"
-          id="panel-main-trigger"
-        >
-          <span class="division-panel__content">
-            <span class="division-panel__meta">
-              <span class="tier-badge">Main</span>
-              <strong class="division-panel__name">Main Division</strong>
-            </span>
-            <span class="division-panel__desc">Our core development pipeline &mdash; structured rosters taking players from fundamentals to advanced competition.</span>
-          </span>
-          <span class="division-panel__media" style="background-image: url('/images/teams/banners/andro-banner.png');" aria-hidden="true"></span>
-          <span class="division-panel__chevron" aria-hidden="true"></span>
-        </button>
-        <div class="division-panel__body" id="panel-main-body" role="region" aria-labelledby="panel-main-trigger" hidden>
-          <div class="division-team-grid">
-
-            <article class="division-team-card theme--horizon" data-team-id="horizon">
-              <div class="division-team-card__banner" style="background-image: url('/images/teams/banners/horizon-banner.png');">
-                <span class="division-team-card__overlay" aria-hidden="true"></span>
-                <img class="division-team-card__logo" src="/images/teams/logos/andro-horizon.png" alt="Horizon logo">
-              </div>
-              <div class="division-team-card__content">
-                <span class="tier-badge">T1</span>
-                <h3>Horizon</h3>
-                <p class="muted">Entry-level roster focused on growth, fundamentals, and player development.</p>
-              </div>
-            </article>
-
-            <article class="division-team-card theme--spiral" data-team-id="spiral">
-              <div class="division-team-card__banner" style="background-image: url('/images/teams/banners/spiral-banner.png');">
-                <span class="division-team-card__overlay" aria-hidden="true"></span>
-                <img class="division-team-card__logo" src="/images/teams/logos/andro-spiral.png" alt="Spiral logo">
-              </div>
-              <div class="division-team-card__content">
-                <span class="tier-badge">T2</span>
-                <h3>Spiral</h3>
-                <p class="muted">Mid-tier development roster building consistency, teamwork, and competitive experience.</p>
-              </div>
-            </article>
-
-            <article class="division-team-card theme--proxima" data-team-id="proxima">
-              <div class="division-team-card__banner" style="background-image: url('/images/teams/banners/proxima-banner.png');">
-                <span class="division-team-card__overlay" aria-hidden="true"></span>
-                <img class="division-team-card__logo" src="/images/teams/logos/andro-proxima.png" alt="Proxima logo">
-              </div>
-              <div class="division-team-card__content">
-                <span class="tier-badge">T3</span>
-                <h3>Proxima</h3>
-                <p class="muted">Top-level Main division roster focused on performance, coordination, and results.</p>
-              </div>
-            </article>
-
-            <article class="division-team-card theme--comet" data-team-id="comet">
-              <div class="division-team-card__banner" style="background-image: url('/images/teams/banners/comet-banner.png');">
-                <span class="division-team-card__overlay" aria-hidden="true"></span>
-                <img
-                  class="division-team-card__logo"
-                  src="/images/teams/logos/comet-logo.png"
-                  alt="Comet logo"
-                  onerror="this.onerror=null;this.src='/images/teams/logos/andro-faceit.png';"
-                >
-              </div>
-              <div class="division-team-card__content">
-                <span class="tier-badge">Main</span>
-                <h3>Comet</h3>
-                <p class="muted">Development-focused competitive roster building communication, match structure, and long-term consistency.</p>
-              </div>
-            </article>
-
-            <article class="division-team-card theme--supernova" data-team-id="supernova">
-              <div class="division-team-card__banner" style="background-image: url('/images/teams/banners/supernova-banner.png');">
-                <span class="division-team-card__overlay" aria-hidden="true"></span>
-                <img
-                  class="division-team-card__logo"
-                  src="/images/teams/logos/supernova-logo.png"
-                  alt="Supernova logo"
-                  onerror="this.onerror=null;this.src='/images/teams/logos/andro-faceit.png';"
-                >
-              </div>
-              <div class="division-team-card__content">
-                <span class="tier-badge">Main</span>
-                <h3>Supernova</h3>
-                <p class="muted">Development-focused competitive roster building structure, consistency, and team coordination.</p>
-              </div>
-            </article>
-
-            <article class="division-team-card theme--void" data-team-id="void">
-              <div class="division-team-card__banner" style="background-image: url('/images/teams/banners/void-banner.png');">
-                <span class="division-team-card__overlay" aria-hidden="true"></span>
-                <img
-                  class="division-team-card__logo"
-                  src="/images/teams/logos/void-logo.png"
-                  alt="Void logo"
-                  onerror="this.onerror=null;this.src='/images/teams/logos/andro-faceit.png';"
-                >
-              </div>
-              <div class="division-team-card__content">
-                <span class="tier-badge">Main</span>
-                <h3>Void</h3>
-                <p class="muted">Development-focused competitive roster working on execution, discipline, and long-term improvement.</p>
-              </div>
-            </article>
-
+        <div class="section-head teams-directory__head">
+          <div>
+            <p class="section-kicker">Team Directory</p>
+            <h2 id="teams-directory-heading">Active Rosters</h2>
+            <p class="lead">Hover or focus a team for a quick roster snapshot, then open the full profile for players, matches, and staff.</p>
           </div>
+          <p class="teams-directory__count" id="teams-directory-count">Loading teams...</p>
+        </div>
+
+        <div class="teams-directory__filters" role="group" aria-label="Filter teams by division">
+          <button class="teams-directory__filter is-active" type="button" data-team-filter="all" aria-pressed="true">All</button>
+          <button class="teams-directory__filter" type="button" data-team-filter="main" aria-pressed="false">Main</button>
+          <button class="teams-directory__filter" type="button" data-team-filter="faceit" aria-pressed="false">FACEIT</button>
+        </div>
+
+        <div class="section-divider" aria-hidden="true"></div>
+        <div class="section-body">
+          <div class="teams-directory__grid" id="teams-directory-grid" aria-live="polite"></div>
         </div>
       </div>
-
-      <!-- FACEIT DIVISION -->
-      <div class="division-panel">
-        <button
-          type="button"
-          class="division-panel__trigger theme--faceit"
-          aria-expanded="false"
-          aria-controls="panel-faceit-body"
-          id="panel-faceit-trigger"
-        >
-          <span class="division-panel__content">
-            <span class="division-panel__meta">
-              <span class="tier-badge">FACEIT</span>
-              <strong class="division-panel__name">FACEIT Division</strong>
-            </span>
-            <span class="division-panel__desc">Our high-performance FACEIT competitive division &mdash; two dedicated rosters built for organised, results-driven play at the highest active level.</span>
-          </span>
-          <span class="division-panel__media" style="background-image: url('/images/teams/banners/faceit-banner.png');" aria-hidden="true"></span>
-          <span class="division-panel__chevron" aria-hidden="true"></span>
-        </button>
-        <div class="division-panel__body" id="panel-faceit-body" role="region" aria-labelledby="panel-faceit-trigger" hidden>
-          <p class="muted">Our FACEIT division features competitive rosters focused on coordination, consistency, and performance.</p>
-          <div class="division-team-grid division-team-grid--2col">
-
-            <article class="division-team-card theme--faceit" data-team-id="polaris">
-              <div class="division-team-card__banner" style="background-image: url('/images/teams/banners/polaris-banner.png');">
-                <span class="division-team-card__overlay" aria-hidden="true"></span>
-                <img
-                  class="division-team-card__logo"
-                  src="/images/teams/logos/polaris-logo.png"
-                  alt="Polaris logo"
-                  onerror="this.onerror=null;this.src='/images/teams/logos/andro-faceit.png';"
-                >
-              </div>
-              <div class="division-team-card__content">
-                <span class="tier-badge">FACEIT</span>
-                <h3>Polaris</h3>
-              </div>
-            </article>
-
-            <article class="division-team-card theme--faceit" data-team-id="faceit">
-              <div class="division-team-card__banner" style="background-image: url('/images/teams/banners/octantis-banner.png');">
-                <span class="division-team-card__overlay" aria-hidden="true"></span>
-                <img
-                  class="division-team-card__logo"
-                  src="/images/teams/logos/octantis-logo.png"
-                  alt="Octantis logo"
-                  onerror="this.onerror=null;this.src='/images/teams/logos/andro-faceit.png';"
-                >
-              </div>
-              <div class="division-team-card__content">
-                <span class="tier-badge">FACEIT</span>
-                <h3>Octantis</h3>
-              </div>
-            </article>
-
-          </div>
-        </div>
-      </div>
-
-      </div>
-      </div>
-    </div>
+    </section>
   </main>
 
   <footer>
@@ -224,14 +69,23 @@
       <div class="footer-nav">
         <a href="../index.html">Home</a>
         <a href="teams.html">Teams</a>
-        <a href="scrims.html">Matches</a>
-        <a href="contact.html">Contact</a>
+        <a href="schedule.html">Schedule</a>
+        <a href="tournaments.html">Competition</a>
+        <a href="contact.html">About</a>
       </div>
       <div class="footer-social">
-        <a class="social btn" href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener">Join Discord</a>
-        <a class="social" href="https://twitch.tv/andromeda_esports_" target="_blank" rel="noopener">Twitch</a>
-        <a class="social" href="https://youtube.com/@andromedaesports-n5z1w" target="_blank" rel="noopener">YouTube</a>
-        <a class="social" href="https://www.tiktok.com/@andromeda.esports7" target="_blank" rel="noopener">TikTok</a>
+        <a class="social btn social--discord" href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener noreferrer" aria-label="Join Discord">
+          <span>Join Discord</span>
+        </a>
+        <a class="social social--twitch" href="https://twitch.tv/andromeda_esports_" target="_blank" rel="noopener noreferrer" aria-label="Andromeda on Twitch">
+          <span>Twitch</span>
+        </a>
+        <a class="social social--youtube" href="https://youtube.com/@andromedaesports-n5z1w" target="_blank" rel="noopener noreferrer" aria-label="Andromeda on YouTube">
+          <span>YouTube</span>
+        </a>
+        <a class="social social--tiktok" href="https://www.tiktok.com/@andromeda.esports7" target="_blank" rel="noopener noreferrer" aria-label="Andromeda on TikTok">
+          <span>TikTok</span>
+        </a>
       </div>
     </div>
     <div class="footer-bottom container">
@@ -239,8 +93,8 @@
     </div>
   </footer>
 
-  <script src="../js/teams-accordion.js"></script>
   <script type="module" src="/js/pages/teams-overview.js"></script>
+  <script type="module" src="/js/pages/site-analytics.js"></script>
   <script src="/js/animations.js" defer></script>
   <script src="/js/ambient-background.js" defer></script>
 

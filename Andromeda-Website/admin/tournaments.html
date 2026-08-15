@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Competition Hub | Andromeda Esports</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Competition Hub</h1>
+          <p class="admin-brand__subtitle">Create and manage published competition records</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
+        <span class="admin-role-badge" data-admin-role>—</span>
+        <span>Signed in as <strong data-admin-email>—</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section class="admin-grid admin-grid--two">
+      <article class="admin-card">
+        <h2>Add / Edit Competition Record</h2>
+        <p class="admin-page-purpose">Create tournament, league, and event records for the public Competition Hub. Publish only records that are ready for visitors to see.</p>
+        <p class="admin-public-impact">Public impact: published records appear on the public Competition Hub page.</p>
+
+        <form id="tournament-form" class="admin-grid" novalidate>
+          <input id="tournament-id" type="hidden">
+
+          <div>
+            <label class="admin-label" for="tournament-name">Tournament Name</label>
+            <input id="tournament-name" class="admin-input" type="text" required>
+          </div>
+
+          <div>
+            <label class="admin-label" for="tournament-game">Game</label>
+            <input id="tournament-game" class="admin-input" type="text" required>
+          </div>
+
+          <div class="admin-grid admin-grid--two">
+            <div>
+              <label class="admin-label" for="tournament-start-date">Start Date</label>
+              <input id="tournament-start-date" class="admin-input" type="date" required>
+            </div>
+            <div>
+              <label class="admin-label" for="tournament-end-date">End Date (optional)</label>
+              <input id="tournament-end-date" class="admin-input" type="date">
+            </div>
+          </div>
+
+          <div>
+            <label class="admin-label" for="tournament-placement">Placement Text (optional)</label>
+            <input id="tournament-placement" class="admin-input" type="text" placeholder="Top 8">
+          </div>
+
+          <div class="admin-grid admin-grid--two">
+            <div>
+              <label class="admin-label" for="tournament-wins">Wins</label>
+              <input id="tournament-wins" class="admin-input" type="number" min="0" step="1" value="0" required>
+            </div>
+            <div>
+              <label class="admin-label" for="tournament-losses">Losses</label>
+              <input id="tournament-losses" class="admin-input" type="number" min="0" step="1" value="0" required>
+            </div>
+          </div>
+
+          <div>
+            <label class="admin-label" for="tournament-achievements">Achievements (comma separated)</label>
+            <input id="tournament-achievements" class="admin-input" type="text" placeholder="Playoffs qualification, Team MVP">
+          </div>
+
+          <div>
+            <label class="admin-label" for="tournament-highlights">Highlights (comma separated)</label>
+            <input id="tournament-highlights" class="admin-input" type="text" placeholder="Reverse sweep, 13-0 opening map">
+          </div>
+
+          <div>
+            <label class="admin-label" for="tournament-link">External Link (optional)</label>
+            <input id="tournament-link" class="admin-input" type="url" placeholder="https://...">
+          </div>
+
+          <label style="display:flex; align-items:center; gap:8px; color:var(--admin-muted);">
+            <input id="tournament-published" type="checkbox" checked>
+            Published (publicly visible)
+          </label>
+
+          <div class="admin-inline-actions">
+            <button class="admin-btn admin-btn--primary" type="submit">Save Record</button>
+            <button id="tournament-reset-btn" class="admin-btn admin-btn--secondary" type="button">Clear</button>
+          </div>
+
+          <p id="admin-tournaments-status" class="admin-status admin-text-muted">Ready.</p>
+        </form>
+      </article>
+
+      <article class="admin-card">
+        <h2>Existing Competition Records</h2>
+        <p class="admin-page-purpose">Edit, publish, unpublish, or delete competition records from this list.</p>
+        <p class="admin-public-impact">Public impact: changing publish status controls whether visitors can see each record.</p>
+        <p class="admin-text-muted">Includes published records and drafts.</p>
+        <div id="admin-tournaments-list" class="admin-grid">
+          <p class="admin-empty">Loading tournaments...</p>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="js/tournaments.js"></script>
+</body>
+</html>
