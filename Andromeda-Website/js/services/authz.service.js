@@ -1,6 +1,18 @@
-import { auth } from '/js/core/firebase.js';
+import { auth, db } from '/js/core/firebase.js';
 import { getIdTokenResult } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 import { isEmailAllowlisted } from '/js/services/admin.service.js';
+import { acceptPendingStaffInvite } from '/js/services/staff-invite-claim.service.js';
+import {
+  authzHasAnyPermission,
+  authzHasAllPermissions,
+  authzHasRole,
+  canAccessTeam,
+  getScopedTeamId,
+  parsePermissionList,
+  parseRoleList,
+  resolveStaffAccessSnapshot
+} from '/js/services/staff-roles.js';
 
 export function getCurrentUser() {
   return auth.currentUser || null;
@@ -14,51 +26,120 @@ export async function requireAuth() {
   return user;
 }
 
-function hasCaptainClaims(claims) {
-  if (!claims || typeof claims !== 'object') return false;
+async function getStaffRecordForUser(user) {
+  if (!user?.uid) return null;
 
-  if (claims.captain === true) return true;
+  try {
+    const staffRef = doc(db, 'staffAccess', user.uid);
+    const staffSnap = await getDoc(staffRef);
+    return staffSnap.exists() ? { uid: user.uid, ...staffSnap.data() } : null;
+  } catch (error) {
+    console.error('Staff access lookup failed:', error);
+    return null;
+  }
+}
 
-  const role = String(claims.role || '').toLowerCase().trim();
-  if (role === 'captain' || role === 'admin') return true;
+async function getTokenClaims(user, forceRefresh = false) {
+  try {
+    const tokenResult = await getIdTokenResult(user, forceRefresh);
+    return tokenResult?.claims || {};
+  } catch (error) {
+    console.error('Token claim lookup failed:', error);
+    return {};
+  }
+}
 
-  if (Array.isArray(claims.roles)) {
-    return claims.roles.some((value) => {
-      const normalized = String(value || '').toLowerCase().trim();
-      return normalized === 'captain' || normalized === 'admin';
-    });
+export async function getCurrentStaffAccess({ forceRefreshToken = false } = {}) {
+  const user = getCurrentUser();
+  if (!user) {
+    return resolveStaffAccessSnapshot();
   }
 
-  return false;
+  const email = String(user.email || '').trim().toLowerCase();
+  let staffRecord = await getStaffRecordForUser(user);
+  const tokenClaims = await getTokenClaims(user, forceRefreshToken);
+
+  if (!staffRecord) {
+    staffRecord = await acceptPendingStaffInvite(user);
+  }
+
+  let allowlisted = false;
+  if (!staffRecord) {
+    try {
+      allowlisted = await isEmailAllowlisted(email);
+    } catch (error) {
+      console.error('Allowlist check failed:', error);
+    }
+  }
+
+  return resolveStaffAccessSnapshot({
+    user,
+    staffRecord,
+    allowlisted,
+    tokenClaims
+  });
+}
+
+export async function requireStaffAccess({
+  roles = [],
+  permissions = [],
+  requireAllPermissions = false,
+  message = 'You are not authorized to access this admin tool.'
+} = {}) {
+  await requireAuth();
+  const authz = await getCurrentStaffAccess();
+  const allowedRoles = parseRoleList(roles);
+  const requiredPermissions = parsePermissionList(permissions);
+
+  if (!authz.isAuthorized) {
+    throw new Error(message);
+  }
+
+  if (allowedRoles.length && !authzHasRole(authz, allowedRoles)) {
+    throw new Error(message);
+  }
+
+  const hasRequiredPermissions = requireAllPermissions
+    ? authzHasAllPermissions(authz, requiredPermissions)
+    : authzHasAnyPermission(authz, requiredPermissions);
+
+  if (requiredPermissions.length && !hasRequiredPermissions) {
+    throw new Error(message);
+  }
+
+  return authz;
+}
+
+export async function requireRole(roles, options = {}) {
+  return requireStaffAccess({ ...options, roles });
+}
+
+export async function requirePermission(permission, options = {}) {
+  return requireStaffAccess({ ...options, permissions: [permission] });
+}
+
+export async function requireAnyPermission(permissions, options = {}) {
+  return requireStaffAccess({ ...options, permissions });
+}
+
+export async function requireAllPermissions(permissions, options = {}) {
+  return requireStaffAccess({ ...options, permissions, requireAllPermissions: true });
+}
+
+export async function requireTeamPermission(permission, teamId, options = {}) {
+  const authz = await requirePermission(permission, options);
+  if (!canAccessTeam(authz, teamId)) {
+    throw new Error(options.message || 'You are not authorized to manage this team.');
+  }
+  return authz;
+}
+
+export function getAuthorizedTeamScope(authz, requestedTeamId = '') {
+  return getScopedTeamId(authz, requestedTeamId);
 }
 
 export async function requireAdminOrCaptain() {
-  const user = await requireAuth();
-  const email = String(user.email || '').trim().toLowerCase();
-
-  let allowlisted = false;
-  try {
-    allowlisted = await isEmailAllowlisted(email);
-  } catch (error) {
-    console.error('Allowlist check failed:', error);
-  }
-
-  const tokenResult = await getIdTokenResult(user, false);
-  const captainByClaims = hasCaptainClaims(tokenResult?.claims);
-
-  if (!allowlisted && !captainByClaims) {
-    throw new Error('You are not authorized to submit match reports.');
-  }
-
-  const role = allowlisted ? 'admin' : 'captain';
-
-  return {
-    user,
-    email,
-    role,
-    isAdmin: allowlisted,
-    isCaptain: captainByClaims,
-    allowlisted,
-    captainByClaims
-  };
+  return requireAnyPermission(['matches:write'], {
+    message: 'You are not authorized to submit match reports.'
+  });
 }

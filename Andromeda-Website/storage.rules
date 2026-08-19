@@ -1,0 +1,132 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function staffPath() {
+      return /databases/(default)/documents/staffAccess/$(request.auth.uid);
+    }
+
+    function hasStaffAccessRecord() {
+      return signedIn() && firestore.exists(staffPath());
+    }
+
+    function staffData() {
+      return firestore.get(staffPath()).data;
+    }
+
+    function activeStaffHasAnyRole(roles) {
+      return hasStaffAccessRecord()
+        && staffData().active == true
+        && (
+          staffData().role == 'superadmin'
+          || staffData().role in roles
+        );
+    }
+
+    function tokenHasAnyRole(roles) {
+      return signedIn()
+        && (
+          request.auth.token.role == 'superadmin'
+          || request.auth.token.role in roles
+          || (
+            request.auth.token.roles is list
+            && (
+              request.auth.token.roles.hasAny(['superadmin'])
+              || request.auth.token.roles.hasAny(roles)
+            )
+          )
+          || ('captain' in roles && request.auth.token.captain == true)
+        );
+    }
+
+    function isLegacyAllowlistedAdmin() {
+      return signedIn()
+        && request.auth.token.email is string
+        && firestore.exists(/databases/(default)/documents/config/adminAllowlist)
+        && firestore.get(/databases/(default)/documents/config/adminAllowlist).data.emails[request.auth.token.email] == true;
+    }
+
+    function hasAnyRole(roles) {
+      return activeStaffHasAnyRole(roles)
+        || (
+          !hasStaffAccessRecord()
+          && (
+            ('admin' in roles && isLegacyAllowlistedAdmin())
+            || tokenHasAnyRole(roles)
+          )
+        );
+    }
+
+    function validTeamId(teamId) {
+      return teamId is string
+        && teamId in [
+          'horizon',
+          'spiral',
+          'proxima',
+          'comet',
+          'supernova',
+          'void',
+          'polaris',
+          'octantis'
+        ];
+    }
+
+    function assignedTeamMatches(teamId) {
+      return validTeamId(teamId)
+        && (
+          (
+            hasStaffAccessRecord()
+            && staffData().active == true
+            && staffData().teamId == teamId
+          )
+          || (
+            !hasStaffAccessRecord()
+            && (
+              request.auth.token.teamId == teamId
+              || request.auth.token.team_id == teamId
+            )
+          )
+        );
+    }
+
+    function canManageTeam(teamId) {
+      return validTeamId(teamId)
+        && (
+          hasAnyRole(['owner', 'admin'])
+          || (
+            hasAnyRole(['manager', 'captain'])
+            && assignedTeamMatches(teamId)
+          )
+        );
+    }
+
+    function isImageUpload() {
+      return request.resource != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /media-hub/{path=**} {
+      allow read: if true;
+      allow write: if hasAnyRole(['owner', 'admin', 'media']) && isImageUpload();
+    }
+
+    match /officials/{teamId}/{matchId}/{fileName} {
+      allow read: if true;
+      allow write: if canManageTeam(teamId) && isImageUpload();
+    }
+
+    match /scrims/{teamId}/{matchId}/{fileName} {
+      allow read: if canManageTeam(teamId);
+      allow write: if canManageTeam(teamId) && isImageUpload();
+    }
+
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

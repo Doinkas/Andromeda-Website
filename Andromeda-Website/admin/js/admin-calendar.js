@@ -1,5 +1,6 @@
-import { listAdminMatches, saveAdminMatch, upsertMatches } from '/js/services/matches.service.js';
+import { deleteAdminMatch, listAdminMatches, saveAdminMatch, upsertMatches } from '/js/services/matches.service.js';
 import { uploadMatchScreenshots } from '/js/services/scrims.service.js';
+import { requirePermission, requireTeamPermission } from '/js/services/authz.service.js';
 import { SCHEDULE_LABEL_TO_TEAM_ID, TEAM_OPTIONS } from '/js/config/teams.config.js';
 import { db } from '/js/core/firebase.js';
 import { collection, getDocs, query, orderBy, limit as fbLimit, setDoc, doc, deleteDoc, Timestamp, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
@@ -12,6 +13,8 @@ let currentMonth = new Date();
 let currentTeamFilter = '';
 let adminEmail = null;
 let adminRole = null;
+let canManageEvents = false;
+let assignedTeamId = null;
 let allMatches = [];
 let allEvents = [];
 let activeMatchScreenshotUrls = [];
@@ -228,21 +231,35 @@ function setCalendarTab(nextTab) {
   });
 }
 
-function populateTeamSelect(select, { includeAll = false } = {}) {
+function populateTeamSelect(select, { includeAll = false, onlyTeamId = '' } = {}) {
   if (!select) return;
-  select.innerHTML = includeAll
-    ? '<option value="">All Teams</option>'
-    : '<option value="">Select team</option>';
+  const normalizedOnlyTeamId = String(onlyTeamId || '').trim().toLowerCase();
+  const teams = normalizedOnlyTeamId
+    ? TEAM_OPTIONS.filter((team) => team.id === normalizedOnlyTeamId)
+    : TEAM_OPTIONS;
 
-  TEAM_OPTIONS.forEach((team) => {
+  select.innerHTML = includeAll && !normalizedOnlyTeamId
+    ? '<option value="">All Teams</option>'
+    : (normalizedOnlyTeamId ? '' : '<option value="">Select team</option>');
+
+  teams.forEach((team) => {
     const option = document.createElement('option');
     option.value = team.id;
     option.textContent = team.name;
     select.appendChild(option);
   });
+
+  if (normalizedOnlyTeamId && teams.length) {
+    select.value = normalizedOnlyTeamId;
+  }
 }
 
 function toggleModalType(type) {
+  if (type === 'event' && !canManageEvents) {
+    modalType.value = 'match';
+    type = 'match';
+  }
+
   if (type === 'event') {
     matchFields.style.display = 'none';
     eventFields.style.display = 'block';
@@ -387,6 +404,12 @@ async function handleImportSubmit(event) {
     }
 
     setStatus(importStatus, `Importing ${matches.length} matches...`, 'info');
+    const unauthorizedTeam = matches.find((match) => !match.teamId);
+    if (unauthorizedTeam) {
+      setStatus(importStatus, 'Every imported row must resolve to a team.', 'error');
+      return;
+    }
+
     await upsertMatches(matches, adminEmail);
 
     setStatus(importStatus, `✓ Successfully imported ${matches.length} matches!`, 'success');
@@ -580,7 +603,7 @@ function renderSelectedDayDetail() {
     edit.addEventListener('click', () => openEventModal(event));
 
     item.appendChild(info);
-    item.appendChild(edit);
+    if (canManageEvents) item.appendChild(edit);
     calendarDayDetailList.appendChild(item);
   });
 }
@@ -636,10 +659,12 @@ function renderCalendarDay(date, isCurrentMonth) {
     text.textContent = formatEventDisplay(event);
     
     eventEl.appendChild(text);
-    eventEl.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openEventModal(event);
-    });
+    if (canManageEvents) {
+      eventEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openEventModal(event);
+      });
+    }
 
     dayEl.appendChild(eventEl);
   });
@@ -667,7 +692,7 @@ function renderCalendarDay(date, isCurrentMonth) {
     });
 
     actionsEl.appendChild(matchButton);
-    actionsEl.appendChild(eventButton);
+    if (canManageEvents) actionsEl.appendChild(eventButton);
     dayEl.appendChild(actionsEl);
   }
 
@@ -816,6 +841,11 @@ function createNewMatchForDay(date) {
 }
 
 function createNewEventForDay(date) {
+  if (!canManageEvents) {
+    setStatus(calendarStatus, 'Your role cannot create calendar events.', 'error');
+    return;
+  }
+
   const parts = toLocalDateInputParts(date);
   
   modalType.value = 'event';
@@ -872,6 +902,10 @@ async function handleMatchFormSubmit(event) {
         return;
       }
 
+      await requireTeamPermission('matches:write', teamId, {
+        message: 'You are not authorized to save matches for this team.'
+      });
+
       const scoreParts = parseMapScore(modalScore.value);
       const pendingScreenshotFiles = Array.from(modalScreenshots.files || []);
       let screenshotUrls = [...activeMatchScreenshotUrls];
@@ -915,6 +949,10 @@ async function handleMatchFormSubmit(event) {
 
       setStatus(modalStatus, '✓ Match saved!', 'success');
     } else if (type === 'event') {
+      await requirePermission('events:write', {
+        message: 'You are not authorized to save calendar events.'
+      });
+
       const eventId = modalMatchId.value.trim() || `event_${Date.now()}`;
       const name = modalEventName.value.trim();
 
@@ -969,8 +1007,14 @@ async function handleMatchDelete() {
     setStatus(modalStatus, `Deleting ${type}...`, 'info');
     modalDelete.disabled = true;
 
-    const collectionName = type === 'event' ? 'events' : 'matches';
-    await deleteDoc(doc(db, collectionName, id));
+    if (type === 'event') {
+      await requirePermission('events:write', {
+        message: 'You are not authorized to delete calendar events.'
+      });
+      await deleteDoc(doc(db, 'events', id));
+    } else {
+      await deleteAdminMatch(id);
+    }
     setStatus(modalStatus, `✓ ${type.charAt(0).toUpperCase() + type.slice(1)} deleted!`, 'success');
 
     await loadCalendar();
@@ -1064,8 +1108,33 @@ modalType.addEventListener('change', (e) => {
 window.addEventListener('admin:authorized', async (event) => {
   adminEmail = String(event?.detail?.email || '').trim().toLowerCase() || null;
   adminRole = String(event?.detail?.role || '').trim().toLowerCase() || null;
-  populateTeamSelect(calendarTeamFilter, { includeAll: true });
-  populateTeamSelect(modalTeam);
+  const permissions = Array.isArray(event?.detail?.permissions) ? event.detail.permissions : [];
+  canManageEvents = permissions.includes('events:write');
+  const canManageAllTeams = permissions.includes('teams:any');
+  const requestedAssignedTeam = String(event?.detail?.teamId || '').trim().toLowerCase();
+  const hasValidAssignedTeam = TEAM_OPTIONS.some((team) => team.id === requestedAssignedTeam);
+  assignedTeamId = !canManageAllTeams && hasValidAssignedTeam ? requestedAssignedTeam : null;
+  const eventOption = modalType?.querySelector('option[value="event"]');
+  if (eventOption) eventOption.disabled = !canManageEvents;
+  if (canManageAllTeams) {
+    populateTeamSelect(calendarTeamFilter, { includeAll: true });
+    populateTeamSelect(modalTeam);
+    calendarTeamFilter.disabled = false;
+    modalTeam.disabled = false;
+    currentTeamFilter = '';
+  } else if (assignedTeamId) {
+    populateTeamSelect(calendarTeamFilter, { onlyTeamId: assignedTeamId });
+    populateTeamSelect(modalTeam, { onlyTeamId: assignedTeamId });
+    calendarTeamFilter.disabled = true;
+    modalTeam.disabled = true;
+    currentTeamFilter = assignedTeamId;
+  } else {
+    populateTeamSelect(calendarTeamFilter, { includeAll: true });
+    populateTeamSelect(modalTeam);
+    calendarTeamFilter.disabled = true;
+    modalTeam.disabled = true;
+    currentTeamFilter = '';
+  }
   await loadCalendar();
 });
 

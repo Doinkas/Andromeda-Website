@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body class="admin-body">
-  <main id="adminApp" hidden class="admin-shell">
+  <main id="adminApp" hidden class="admin-shell" data-admin-permissions="admin:access">
     <header class="admin-topbar">
       <div class="admin-brand">
         <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
@@ -32,10 +32,10 @@
       <div class="admin-dashboard-section">
         <h3 class="admin-dashboard-section__heading">Match Ops</h3>
         <div class="admin-grid admin-grid--cards">
-          <a class="admin-link-card admin-link-card--primary" href="calendar.html" data-admin-visible="admin,captain">
+          <a class="admin-link-card admin-link-card--primary" href="calendar.html" data-admin-permissions-visible="matches:write">
             <span class="admin-link-card__topline">
               <span class="admin-link-card__title">Match Calendar</span>
-              <span class="admin-link-card__access">Captains allowed</span>
+              <span class="admin-link-card__access">Match ops</span>
             </span>
             <span class="admin-link-card__meta">Schedule, import, edit, and complete official matches from one workspace.</span>
           </a>
@@ -45,10 +45,10 @@
       <div class="admin-dashboard-section">
         <h3 class="admin-dashboard-section__heading">Team Ops</h3>
         <div class="admin-grid admin-grid--cards">
-          <a class="admin-link-card" href="admin.html" data-admin-visible="admin">
+          <a class="admin-link-card" href="admin.html" data-admin-permissions-visible="rosters:write">
             <span class="admin-link-card__topline">
               <span class="admin-link-card__title">Rosters + Trials</span>
-              <span class="admin-link-card__access">Admin only</span>
+              <span class="admin-link-card__access">Team ops</span>
             </span>
             <span class="admin-link-card__meta">Edit public rosters, team profile data, and process the trial queue.</span>
           </a>
@@ -58,14 +58,14 @@
       <div class="admin-dashboard-section">
         <h3 class="admin-dashboard-section__heading">Public Content</h3>
         <div class="admin-grid admin-grid--cards">
-          <a class="admin-link-card" href="media-hub.html" data-admin-visible="admin">
+          <a class="admin-link-card" href="media-hub.html" data-admin-permissions-visible="mediaHub:write">
             <span class="admin-link-card__topline">
               <span class="admin-link-card__title">Homepage Media Hub</span>
-              <span class="admin-link-card__access">Admin only</span>
+              <span class="admin-link-card__access">Media desk</span>
             </span>
             <span class="admin-link-card__meta">Edit carousel tabs, headlines, bullet points, and links shown on the homepage.</span>
           </a>
-          <a class="admin-link-card" href="tournaments.html" data-admin-visible="admin">
+          <a class="admin-link-card" href="tournaments.html" data-admin-permissions-visible="tournaments:write">
             <span class="admin-link-card__topline">
               <span class="admin-link-card__title">Competition Hub</span>
               <span class="admin-link-card__access">Admin only</span>
@@ -78,19 +78,32 @@
       <div class="admin-dashboard-section">
         <h3 class="admin-dashboard-section__heading">Review</h3>
         <div class="admin-grid admin-grid--cards">
-          <a class="admin-link-card" href="analytics.html" data-admin-visible="admin">
+          <a class="admin-link-card" href="analytics.html" data-admin-permissions-visible="analytics:read">
             <span class="admin-link-card__topline">
               <span class="admin-link-card__title">Site Analytics</span>
-              <span class="admin-link-card__access">Admin only</span>
+              <span class="admin-link-card__access">Performance</span>
             </span>
             <span class="admin-link-card__meta">View page views, team profile views, social clicks, contact intent, and recent activity.</span>
           </a>
-          <a class="admin-link-card" href="audit-logs.html" data-admin-visible="admin">
+          <a class="admin-link-card" href="audit-logs.html" data-admin-permissions-visible="auditLogs:read">
             <span class="admin-link-card__topline">
               <span class="admin-link-card__title">Audit Log Viewer</span>
               <span class="admin-link-card__access">Admin only</span>
             </span>
             <span class="admin-link-card__meta">Review backend and admin changes with filters by action, team, and date.</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="admin-dashboard-section" data-admin-permissions-visible="staff:invite">
+        <h3 class="admin-dashboard-section__heading">Access</h3>
+        <div class="admin-grid admin-grid--cards">
+          <a class="admin-link-card" href="staff.html">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Staff Access</span>
+              <span class="admin-link-card__access">Super Admin / Owner</span>
+            </span>
+            <span class="admin-link-card__meta">Invite staff by email and manage active access without changing source code.</span>
           </a>
         </div>
       </div>

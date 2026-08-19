@@ -2,6 +2,8 @@ import { db } from '/js/core/firebase.js';
 import { collection, doc, getDoc, getDocs, runTransaction, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 import { validateRoster } from './validation.service.js';
 import { logAudit } from './audit.service.js';
+import { requireTeamPermission } from '/js/services/authz.service.js';
+import { TEAM_IDS } from '/js/config/teams.config.js';
 
 const LEGACY_ROSTER_ID_MAP = {
   faceit: 'octantis'
@@ -151,6 +153,13 @@ export async function listRosterTeams() {
 
 export async function saveRoster(teamId, players, lastModifiedByEmail, teamProfile = null, options = {}) {
   const rosterId = resolveRosterId(teamId);
+  if (!TEAM_IDS.includes(rosterId)) {
+    throw new Error('Select a valid Andromeda team.');
+  }
+  await requireTeamPermission('rosters:write', rosterId, {
+    message: 'You are not authorized to manage this team roster.'
+  });
+
   const rosterRef = doc(db, 'rosters', rosterId);
   const legacyRosterRef = rosterId === 'octantis' ? doc(db, 'rosters', 'faceit') : null;
   const normalizedPlayers = normalizePlayers(players);
@@ -208,6 +217,13 @@ export async function saveRoster(teamId, players, lastModifiedByEmail, teamProfi
 
 export async function verifyRoster(teamId, verifiedByEmail) {
   const rosterId = resolveRosterId(teamId);
+  if (!TEAM_IDS.includes(rosterId)) {
+    throw new Error('Select a valid Andromeda team.');
+  }
+  await requireTeamPermission('rosters:write', rosterId, {
+    message: 'You are not authorized to verify this team roster.'
+  });
+
   const rosterRef = doc(db, 'rosters', rosterId);
 
   await setDoc(

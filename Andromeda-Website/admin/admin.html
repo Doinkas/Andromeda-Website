@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body class="admin-body">
-  <main id="adminApp" hidden class="admin-shell">
+  <main id="adminApp" hidden class="admin-shell" data-admin-permissions="rosters:write">
     <header class="admin-topbar">
       <div class="admin-brand">
         <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
@@ -19,8 +19,8 @@
       </div>
       <div class="admin-user">
         <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
-        <a href="audit-logs.html" class="admin-btn admin-btn--secondary">Audit Logs</a>
-        <a href="tournaments.html" class="admin-btn admin-btn--secondary">Competition Hub</a>
+        <a href="audit-logs.html" class="admin-btn admin-btn--secondary" data-admin-permissions-visible="auditLogs:read">Audit Logs</a>
+        <a href="tournaments.html" class="admin-btn admin-btn--secondary" data-admin-permissions-visible="tournaments:write">Competition Hub</a>
         <a href="calendar.html" class="admin-btn admin-btn--secondary">Match Calendar</a>
         <span class="admin-role-badge" data-admin-role>—</span>
         <span>Signed in as <strong data-admin-email>—</strong></span>

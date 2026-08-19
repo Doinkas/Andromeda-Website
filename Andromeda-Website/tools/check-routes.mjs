@@ -20,6 +20,7 @@ const routes = [
   '/admin/media-hub.html',
   '/admin/analytics.html',
   '/admin/audit-logs.html',
+  '/admin/staff.html',
   '/admin/setup.html'
 ];
 

@@ -11,6 +11,13 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 import { validateTrial, validateTrialStatus } from './validation.service.js';
 import { buildAuditPayload, writeAuditInTransaction } from './audit.service.js';
+import { requireAllPermissions, requirePermission } from '/js/services/authz.service.js';
+import { TEAM_IDS } from '/js/config/teams.config.js';
+import {
+  canAccessTeamTransition,
+  getScopedTeamId,
+  normalizeTeamId
+} from '/js/services/staff-roles.js';
 
 const trialsCollection = collection(db, 'trials');
 const LEGACY_ROSTER_ID_MAP = {
@@ -48,9 +55,21 @@ function normalizeLineup(value, fallback = 'sub') {
 }
 
 export async function listTrials(filters = {}) {
+  const authz = await requirePermission('trials:write', {
+    message: 'You are not authorized to view trials.'
+  });
+  const requestedTeamId = normalizeTeamId(filters.teamId);
+  if (requestedTeamId && !TEAM_IDS.includes(requestedTeamId)) {
+    throw new Error('Select a valid Andromeda team.');
+  }
+  const scopedTeamId = getScopedTeamId(authz, requestedTeamId);
+  if (scopedTeamId === null) {
+    throw new Error('You are not authorized to view trials for this team.');
+  }
+
   const clauses = [];
-  if (filters.teamId) {
-    clauses.push(where('teamId', '==', filters.teamId));
+  if (scopedTeamId) {
+    clauses.push(where('teamId', '==', scopedTeamId));
   }
   if (filters.status) {
     clauses.push(where('status', '==', filters.status));
@@ -61,13 +80,24 @@ export async function listTrials(filters = {}) {
 }
 
 export async function createTrial(trial) {
+  const teamId = normalizeTeamId(trial?.teamId);
+  if (!TEAM_IDS.includes(teamId)) {
+    throw new Error('Select a valid Andromeda team.');
+  }
+  const authz = await requirePermission('trials:write', {
+    message: 'You are not authorized to create trials.'
+  });
+  if (!canAccessTeamTransition(authz, teamId, teamId)) {
+    throw new Error('You are not authorized to create trials for this team.');
+  }
+
   // Validate trial before creating
-  validateTrial(trial);
+  validateTrial({ ...trial, teamId });
 
   const trialRef = doc(trialsCollection);
   const createdBy = trial.performedByEmail || trial.createdBy || null;
   const payload = {
-    teamId: trial.teamId,
+    teamId,
     name: trial.name,
     roles: Array.isArray(trial.roles) ? trial.roles : [],
     status: trial.status || 'pending',
@@ -88,7 +118,7 @@ export async function createTrial(trial) {
       before: null,
       after: payload,
       meta: {
-        teamId: trial.teamId || null
+        teamId
       }
     });
 
@@ -99,6 +129,15 @@ export async function createTrial(trial) {
 }
 
 export async function updateTrial(trialId, data, performedByEmail = null) {
+  const authz = await requirePermission('trials:write', {
+    message: 'You are not authorized to update trials.'
+  });
+  const changesTeam = Object.prototype.hasOwnProperty.call(data || {}, 'teamId');
+  const requestedTeamId = changesTeam ? normalizeTeamId(data.teamId) : null;
+  if (changesTeam && !TEAM_IDS.includes(requestedTeamId)) {
+    throw new Error('Select a valid Andromeda team.');
+  }
+
   const trialRef = doc(db, 'trials', trialId);
 
   await runTransaction(db, async (tx) => {
@@ -108,8 +147,14 @@ export async function updateTrial(trialId, data, performedByEmail = null) {
     }
 
     const beforeData = beforeSnap.data();
+    const currentTeamId = normalizeTeamId(beforeData.teamId);
+    const nextTeamId = changesTeam ? requestedTeamId : currentTeamId;
+    if (!TEAM_IDS.includes(currentTeamId) || !canAccessTeamTransition(authz, currentTeamId, nextTeamId)) {
+      throw new Error('You are not authorized to update this team trial.');
+    }
     const nextData = {
       ...data,
+      ...(changesTeam ? { teamId: nextTeamId } : {}),
       updatedAt: serverTimestamp(),
       lastModifiedBy: performedByEmail || null
     };
@@ -157,6 +202,10 @@ export async function approveTrialToRoster({
   playerStatus = '',
   performedByEmail = null
 } = {}) {
+  const authz = await requireAllPermissions(['trials:write', 'rosters:write'], {
+    message: 'You are not authorized to approve trials into rosters.'
+  });
+
   const normalizedTrialId = String(trialId || '').trim();
   const normalizedTeamId = String(teamId || '').trim().toLowerCase();
 
@@ -166,6 +215,9 @@ export async function approveTrialToRoster({
 
   if (!normalizedTeamId) {
     throw new Error('Team is required.');
+  }
+  if (!TEAM_IDS.includes(normalizedTeamId)) {
+    throw new Error('Select a valid Andromeda team.');
   }
 
   const trialRef = doc(db, 'trials', normalizedTrialId);
@@ -178,6 +230,10 @@ export async function approveTrialToRoster({
     }
 
     const trialData = trialSnap.data() || {};
+    const trialTeamId = normalizeTeamId(trialData.teamId);
+    if (!TEAM_IDS.includes(trialTeamId) || !canAccessTeamTransition(authz, trialTeamId, normalizedTeamId)) {
+      throw new Error('The trial and destination roster must be within your authorized team scope.');
+    }
     const playerName = String(trialData.name || '').trim();
     if (!playerName) {
       throw new Error('Trial player name is missing.');

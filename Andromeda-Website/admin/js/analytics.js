@@ -18,6 +18,8 @@ const listNodes = {
   topCtas: document.querySelector('[data-list="topCtas"]')
 };
 
+let hasAnalyticsAccess = false;
+
 function incrementCount(map, key) {
   if (!key) return;
   map.set(key, (map.get(key) || 0) + 1);
@@ -154,6 +156,13 @@ function summarize(events) {
 }
 
 async function loadAnalytics() {
+  if (!hasAnalyticsAccess) {
+    if (statusNode) {
+      statusNode.textContent = 'Your role cannot view analytics.';
+    }
+    return;
+  }
+
   if (statusNode) {
     statusNode.textContent = 'Loading all-time analytics...';
   }
@@ -186,6 +195,8 @@ async function loadAnalytics() {
   }
 }
 
-document.addEventListener('admin:authorized', loadAnalytics);
-window.addEventListener('DOMContentLoaded', loadAnalytics);
-loadAnalytics();
+document.addEventListener('admin:authorized', async (event) => {
+  const permissions = Array.isArray(event?.detail?.permissions) ? event.detail.permissions : [];
+  hasAnalyticsAccess = permissions.includes('analytics:read');
+  await loadAnalytics();
+});

@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run check:js && npm run check:routes && npm run check:refs",
+    "check": "npm run check:js && npm run test:authz && npm run check:routes && npm run check:refs",
     "check:js": "node tools/check-js.mjs",
+    "test:authz": "node --test tools/authz.test.mjs",
     "check:routes": "node tools/check-routes.mjs",
     "check:refs": "node tools/check-local-refs.mjs"
   }

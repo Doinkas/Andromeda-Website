@@ -558,7 +558,7 @@
   </style>
 </head>
 <body class="admin-body">
-  <main id="adminApp" hidden class="admin-shell">
+  <main id="adminApp" hidden class="admin-shell" data-admin-permissions="matches:write">
     <header class="admin-topbar">
       <div class="admin-brand">
         <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
@@ -583,7 +583,7 @@
       <div class="calendar-tabs" role="tablist" aria-label="Calendar tools">
         <button class="admin-btn admin-btn--secondary calendar-tab active" type="button" data-calendar-tab="calendar">Calendar</button>
         <button class="admin-btn admin-btn--secondary calendar-tab" type="button" data-calendar-tab="import">Import</button>
-        <button class="admin-btn admin-btn--secondary calendar-tab" type="button" data-calendar-tab="events">Events</button>
+        <button class="admin-btn admin-btn--secondary calendar-tab" type="button" data-calendar-tab="events" data-admin-permissions-visible="events:write">Events</button>
         <button class="admin-btn admin-btn--secondary calendar-tab" type="button" data-calendar-tab="matches">Scheduled Matches</button>
       </div>
 
@@ -656,7 +656,7 @@
           <h3 id="calendar-day-detail-title">Select a date</h3>
           <div class="calendar-day-actions">
             <button id="calendar-detail-add-match" type="button" class="calendar-day-action">+ Match</button>
-            <button id="calendar-detail-add-event" type="button" class="calendar-day-action">+ Event</button>
+            <button id="calendar-detail-add-event" type="button" class="calendar-day-action" data-admin-permissions-visible="events:write">+ Event</button>
           </div>
         </div>
         <div id="calendar-day-detail-list" class="calendar-day-detail__list">

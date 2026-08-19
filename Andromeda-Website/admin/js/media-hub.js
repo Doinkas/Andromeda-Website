@@ -1,4 +1,3 @@
-import { storage } from '/js/core/firebase.js';
 import {
   DEFAULT_HOME_MEDIA_HUB,
   getHomeMediaHubContent,
@@ -6,7 +5,7 @@ import {
   saveHomeMediaHubContent
 } from '/js/services/media-hub.service.js';
 import { trackEvent } from '/js/services/analytics.service.js';
-import { getDownloadURL, ref, uploadBytes } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js';
+import { uploadMediaHubImage, validateMediaImageFile } from '/js/services/media-upload.service.js';
 
 const mediaHubMessage = document.getElementById('media-hub-message');
 const loadMediaHubButton = document.getElementById('load-media-hub-btn');
@@ -34,8 +33,6 @@ const fields = {
 };
 
 const DRAFT_KEY = 'andromeda.mediaHubDraft.v2';
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const LINK_PRESETS = [
   { label: 'Discord', href: 'https://discord.gg/yHfEKtBAbc' },
   { label: 'Twitch', href: 'https://twitch.tv/andromeda_esports_' },
@@ -322,7 +319,7 @@ function tryLoadDraft() {
 
 async function loadMediaHubConfig() {
   if (!hasAdminAccess) {
-    setMessage('Not authorized. Sign in with an allowlisted admin account.', true);
+    setMessage('Not authorized. Your role cannot load media hub drafts.', true);
     return;
   }
 
@@ -359,33 +356,17 @@ function resetUnsavedChanges() {
   setMessage('Reset to the last loaded live version.');
 }
 
-function sanitizeFilename(name) {
-  const safe = String(name || 'media-hub-image')
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return safe || 'media-hub-image';
-}
-
 async function uploadSelectedImage() {
   if (!hasAdminAccess) {
-    setMessage('Not authorized. Sign in with an allowlisted admin account.', true);
+    setMessage('Not authorized. Your role cannot upload media assets.', true);
     return;
   }
 
   const file = fields.imageFile?.files?.[0];
-  if (!file) {
-    setMessage('Choose an image file first.', true);
-    return;
-  }
-
-  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
-    setMessage('Use a PNG, JPG, or WebP image.', true);
-    return;
-  }
-
-  if (file.size > MAX_IMAGE_BYTES) {
-    setMessage('Image is too large. Use an image under 2 MB.', true);
+  try {
+    validateMediaImageFile(file);
+  } catch (error) {
+    setMessage(error?.message || 'Choose a valid image file.', true);
     return;
   }
 
@@ -393,16 +374,10 @@ async function uploadSelectedImage() {
     if (uploadButton) uploadButton.disabled = true;
     setMessage('Uploading image...');
 
-    const filePath = `media-hub/home-carousel/panel-${activeSlideIndex + 1}/${Date.now()}-${sanitizeFilename(file.name)}`;
-    const storageRef = ref(storage, filePath);
-    const result = await uploadBytes(storageRef, file, {
-      contentType: file.type,
-      customMetadata: {
-        uploadedBy: currentUserEmail || '',
-        panel: String(activeSlideIndex + 1)
-      }
+    const { url: downloadUrl } = await uploadMediaHubImage(file, {
+      panelIndex: activeSlideIndex,
+      uploadedBy: currentUserEmail || ''
     });
-    const downloadUrl = await getDownloadURL(result.ref);
 
     if (fields.imageUrl) fields.imageUrl.value = downloadUrl;
     if (fields.imageAlt && !fields.imageAlt.value.trim()) {
@@ -424,7 +399,7 @@ async function uploadSelectedImage() {
 
 async function saveMediaHubConfig() {
   if (!hasAdminAccess) {
-    setMessage('Not authorized. Sign in with an allowlisted admin account.', true);
+    setMessage('Not authorized. Your role cannot publish media content.', true);
     return;
   }
 
@@ -501,14 +476,14 @@ setUiEnabled(false);
 
 window.addEventListener('admin:authorized', async (event) => {
   const email = String(event?.detail?.email || '').trim().toLowerCase();
-  const allowlisted = event?.detail?.allowlisted === true;
-  hasAdminAccess = allowlisted;
+  const permissions = Array.isArray(event?.detail?.permissions) ? event.detail.permissions : [];
+  hasAdminAccess = permissions.includes('mediaHub:write');
   currentUserEmail = email || null;
-  setUiEnabled(allowlisted);
+  setUiEnabled(hasAdminAccess);
 
-  if (allowlisted) {
+  if (hasAdminAccess) {
     await loadMediaHubConfig();
   } else {
-    setMessage('This account is not allowlisted for admin writes.', true);
+    setMessage('Your role cannot publish media hub changes.', true);
   }
 });

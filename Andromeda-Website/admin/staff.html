@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Access | Andromeda Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell" data-admin-permissions="staff:invite">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Staff Access</h1>
+          <p class="admin-brand__subtitle">Role assignments</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
+        <span class="admin-role-badge" data-admin-role>-</span>
+        <span>Signed in as <strong data-admin-email>-</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section class="admin-grid admin-grid--two">
+      <article class="admin-card">
+        <h2 id="staff-form-title">Invite Staff</h2>
+        <p id="staff-form-purpose" class="admin-page-purpose">Assign access by email. The invitation activates automatically when that verified account signs in.</p>
+        <form id="staff-access-form" class="admin-grid" novalidate>
+          <input id="staff-uid" type="hidden">
+          <div>
+            <label class="admin-label" for="staff-name">Name</label>
+            <input id="staff-name" class="admin-input" type="text" autocomplete="off">
+          </div>
+          <div>
+            <label class="admin-label" for="staff-email">Email</label>
+            <input id="staff-email" class="admin-input" type="email" autocomplete="off" required>
+          </div>
+          <div class="admin-grid admin-grid--two">
+            <div>
+              <label class="admin-label" for="staff-role">Role</label>
+              <select id="staff-role" class="admin-select" required></select>
+            </div>
+            <div>
+              <label id="staff-team-label" class="admin-label" for="staff-team">Primary Team</label>
+              <select id="staff-team" class="admin-select"></select>
+            </div>
+          </div>
+          <label id="staff-active-row" class="admin-action-row" hidden>
+            <input id="staff-active" type="checkbox" checked>
+            Active
+          </label>
+          <div class="admin-inline-actions">
+            <button id="staff-submit-btn" class="admin-btn admin-btn--primary" type="submit">Create Invitation</button>
+            <button id="staff-clear-btn" class="admin-btn admin-btn--secondary" type="button">Clear</button>
+          </div>
+          <p id="staff-access-status" class="admin-status admin-text-muted">Ready.</p>
+        </form>
+      </article>
+
+      <article class="admin-card">
+        <h2>Invitations</h2>
+        <p class="admin-page-purpose">Pending invitations can be revoked before the account signs in.</p>
+        <div id="staff-invite-list" class="admin-grid">
+          <p class="admin-empty">Loading invitations...</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="admin-card">
+      <h2>Current Staff Records</h2>
+      <p class="admin-page-purpose">Deactivate access without deleting the account history, or reactivate an existing staff member.</p>
+      <div id="staff-access-list" class="admin-grid admin-grid--two">
+        <p class="admin-empty">Loading staff records...</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="js/staff.js"></script>
+</body>
+</html>

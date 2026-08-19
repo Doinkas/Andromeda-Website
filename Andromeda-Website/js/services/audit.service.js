@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   setDoc
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+import { requirePermission } from '/js/services/authz.service.js';
 
 const auditLogsCollection = collection(db, 'auditLogs');
 
@@ -82,6 +83,10 @@ function getAuditTeamId(entry) {
 }
 
 export async function listAuditLogs({ teamId = '', action = '', startDate = null, endDate = null, limitCount = 250 } = {}) {
+  await requirePermission('auditLogs:read', {
+    message: 'You are not authorized to view audit logs.'
+  });
+
   const safeLimit = Math.min(Math.max(Number(limitCount) || 250, 1), 500);
   const snapshot = await getDocs(query(auditLogsCollection, orderBy('performedAt', 'desc'), limit(safeLimit)));
   const normalizedTeam = String(teamId || '').trim().toLowerCase();

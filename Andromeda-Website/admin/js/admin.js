@@ -43,6 +43,7 @@ let savedRosterSnapshot = [];
 let currentTeamProfile = {};
 let currentUserEmail = null;
 let hasAdminAccess = false;
+let assignedTeamId = null;
 let currentRosterVerification = {
   verifiedAt: null,
   verifiedBy: null,
@@ -52,18 +53,31 @@ let pendingSavePayload = null;
 
 const REVIEW_STALE_DAYS = 14;
 
-function populateTeamSelect(select, { includeAll = false } = {}) {
-  if (!select) return;
-  select.innerHTML = includeAll
-    ? '<option value="">All</option>'
-    : '<option value="">Select a team</option>';
+function eventHasPermission(event, permission) {
+  return Array.isArray(event?.detail?.permissions) && event.detail.permissions.includes(permission);
+}
 
-  TEAM_OPTIONS.forEach((team) => {
+function populateTeamSelect(select, { includeAll = false, onlyTeamId = '' } = {}) {
+  if (!select) return;
+  const normalizedOnlyTeamId = String(onlyTeamId || '').trim().toLowerCase();
+  const teams = normalizedOnlyTeamId
+    ? TEAM_OPTIONS.filter((team) => team.id === normalizedOnlyTeamId)
+    : TEAM_OPTIONS;
+
+  select.innerHTML = includeAll && !normalizedOnlyTeamId
+    ? '<option value="">All</option>'
+    : (normalizedOnlyTeamId ? '' : '<option value="">Select a team</option>');
+
+  teams.forEach((team) => {
     const option = document.createElement('option');
     option.value = team.id;
     option.textContent = team.name;
     select.appendChild(option);
   });
+
+  if (normalizedOnlyTeamId && teams.length) {
+    select.value = normalizedOnlyTeamId;
+  }
 }
 
 const TEAM_PROFILE_DEFAULTS = {
@@ -513,7 +527,7 @@ function setTrialsWriteEnabled(enabled) {
 
 function requireAdminWriteAccess(target) {
   if (hasAdminAccess) return true;
-  setMessage(target, 'Not authorized. Sign in with an allowlisted admin account.', true);
+  setMessage(target, 'Not authorized. Your role cannot manage rosters or trials.', true);
   return false;
 }
 
@@ -759,7 +773,7 @@ async function confirmRosterSave() {
     const message = String(error?.message || '').trim();
 
     if (code.includes('permission-denied')) {
-      setMessage(rosterMessage, 'Save failed: Firestore rules denied this write. Account can be allowlisted, but one of the write conditions still failed.', true);
+      setMessage(rosterMessage, 'Save failed: Firestore rules denied this write. Check that your role and team access match the requested change.', true);
       return;
     }
 
@@ -874,6 +888,7 @@ function renderTrials(trials) {
     conversionTeam.style.minWidth = '140px';
     conversionTeam.innerHTML = teamSelect.innerHTML;
     conversionTeam.value = trial.teamId || '';
+    conversionTeam.disabled = Boolean(assignedTeamId);
 
     const conversionRole = document.createElement('input');
     conversionRole.className = 'admin-input';
@@ -972,7 +987,7 @@ function renderTrials(trials) {
 
 async function loadTrials() {
   if (!hasAdminAccess) {
-    setMessage(trialsMessage, 'Only allowlisted admins can view and manage trials.', true);
+    setMessage(trialsMessage, 'Your role cannot view or manage trials.', true);
     trialsList.innerHTML = '';
     return;
   }
@@ -1071,19 +1086,56 @@ if (initialTeamParam && Array.from(teamSelect.options).some((option) => option.v
 
 window.addEventListener('admin:authorized', async (event) => {
   const email = String(event?.detail?.email || '').trim().toLowerCase();
-  const allowlisted = event?.detail?.allowlisted === true;
-  const captainByClaims = event?.detail?.captainByClaims === true;
-  hasAdminAccess = allowlisted;
+  const permissions = Array.isArray(event?.detail?.permissions) ? event.detail.permissions : [];
+  const hasRosterAccess = eventHasPermission(event, 'rosters:write');
+  const hasTrialsAccess = eventHasPermission(event, 'trials:write');
+  const canManageAllTeams = permissions.includes('teams:any');
+  const requestedAssignedTeam = String(event?.detail?.teamId || '').trim().toLowerCase();
+  const hasValidAssignedTeam = TEAM_OPTIONS.some((team) => team.id === requestedAssignedTeam);
+  assignedTeamId = !canManageAllTeams && hasValidAssignedTeam ? requestedAssignedTeam : null;
+  hasAdminAccess = hasRosterAccess
+    && hasTrialsAccess
+    && (canManageAllTeams || Boolean(assignedTeamId));
   currentUserEmail = email || null;
-  setRosterUiEnabled(allowlisted);
-  setTrialsWriteEnabled(allowlisted);
+  setRosterUiEnabled(hasAdminAccess);
+  setTrialsWriteEnabled(hasAdminAccess);
 
-  if (allowlisted) {
-    setMessage(rosterMessage, email ? `Authorized as ${email}. Select a team to edit roster.` : 'Authorized. Select a team to edit roster.');
+  if (canManageAllTeams) {
+    populateTeamSelect(teamSelect);
+    populateTeamSelect(trialsTeamFilter, { includeAll: true });
+    populateTeamSelect(trialTeamSelect);
+    if (selectedTeam && Array.from(teamSelect.options).some((option) => option.value === selectedTeam)) {
+      teamSelect.value = selectedTeam;
+    }
+    teamSelect.disabled = !hasRosterAccess;
+    trialsTeamFilter.disabled = !hasTrialsAccess;
+    trialTeamSelect.disabled = !hasTrialsAccess;
+  } else if (assignedTeamId) {
+    populateTeamSelect(teamSelect, { onlyTeamId: assignedTeamId });
+    populateTeamSelect(trialsTeamFilter, { onlyTeamId: assignedTeamId });
+    populateTeamSelect(trialTeamSelect, { onlyTeamId: assignedTeamId });
+    teamSelect.disabled = true;
+    trialsTeamFilter.disabled = true;
+    trialTeamSelect.disabled = true;
+    selectedTeam = assignedTeamId;
   } else {
-    const reason = captainByClaims
-      ? 'You are signed in with captain access, but roster/trial writes require an allowlisted admin email.'
-      : 'This account is signed in but not allowlisted for admin writes.';
+    selectedTeam = '';
+    teamSelect.disabled = true;
+    trialsTeamFilter.disabled = true;
+    trialTeamSelect.disabled = true;
+  }
+
+  if (hasAdminAccess) {
+    setMessage(
+      rosterMessage,
+      assignedTeamId
+        ? `Authorized for ${assignedTeamId}.`
+        : (email ? `Authorized as ${email}. Select a team to edit roster.` : 'Authorized. Select a team to edit roster.')
+    );
+  } else {
+    const reason = hasRosterAccess && hasTrialsAccess
+      ? 'Your Manager account needs a valid assigned team before team operations are available.'
+      : 'Your role does not include roster and trial management.';
     setMessage(rosterMessage, reason, true);
     setMessage(trialsMessage, reason, true);
   }

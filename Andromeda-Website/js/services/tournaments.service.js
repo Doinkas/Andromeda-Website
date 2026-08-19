@@ -1,4 +1,4 @@
-import { auth, db } from '/js/core/firebase.js';
+import { db } from '/js/core/firebase.js';
 import {
   Timestamp,
   addDoc,
@@ -14,7 +14,7 @@ import {
   updateDoc,
   where
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
-import { isEmailAllowlisted } from '/js/services/admin.service.js';
+import { requirePermission } from '/js/services/authz.service.js';
 
 const tournamentsRef = collection(db, 'tournaments');
 
@@ -100,23 +100,10 @@ function normalizeTournamentInput(data, { includeCreatedAt = false, forUpdate = 
   return payload;
 }
 
-async function requireAllowlistedAdmin() {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('You must be signed in.');
-  }
-
-  const email = normalizeString(user.email).toLowerCase();
-  if (!email) {
-    throw new Error('Signed-in user email is unavailable.');
-  }
-
-  const allowlisted = await isEmailAllowlisted(email);
-  if (!allowlisted) {
-    throw new Error('You are not authorized to manage tournaments.');
-  }
-
-  return { user, email };
+async function requireTournamentEditor() {
+  return requirePermission('tournaments:write', {
+    message: 'You are not authorized to manage tournaments.'
+  });
 }
 
 export async function listPublishedTournaments(limit = 50) {
@@ -138,7 +125,7 @@ export async function listPublishedTournaments(limit = 50) {
 }
 
 export async function listAllTournamentsForAdmin(limit = 200) {
-  await requireAllowlistedAdmin();
+  await requireTournamentEditor();
 
   const safeLimit = Math.min(Math.max(Number(limit) || 200, 1), 500);
   const q = query(tournamentsRef, orderBy('startDate', 'desc'), fbLimit(safeLimit));
@@ -148,14 +135,14 @@ export async function listAllTournamentsForAdmin(limit = 200) {
 }
 
 export async function createTournament(data) {
-  await requireAllowlistedAdmin();
+  await requireTournamentEditor();
   const payload = normalizeTournamentInput(data, { includeCreatedAt: true, forUpdate: false });
   const created = await addDoc(tournamentsRef, payload);
   return created.id;
 }
 
 export async function updateTournament(id, data) {
-  await requireAllowlistedAdmin();
+  await requireTournamentEditor();
 
   const tournamentId = normalizeString(id);
   if (!tournamentId) {
@@ -167,7 +154,7 @@ export async function updateTournament(id, data) {
 }
 
 export async function deleteTournament(id) {
-  await requireAllowlistedAdmin();
+  await requireTournamentEditor();
 
   const tournamentId = normalizeString(id);
   if (!tournamentId) {

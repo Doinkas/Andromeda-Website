@@ -1,5 +1,12 @@
 import { adminSignIn, adminSignOut, onAdminAuthState } from '/js/admin/admin-auth.js';
-import { requireAdminOrCaptain } from '/js/services/authz.service.js';
+import { requireStaffAccess } from '/js/services/authz.service.js';
+import {
+  authzHasAnyPermission,
+  authzHasRole,
+  getStaffRoleLabel,
+  parsePermissionList,
+  parseRoleList
+} from '/js/services/staff-roles.js';
 
 const appShell = document.getElementById('adminApp');
 if (appShell) {
@@ -79,31 +86,45 @@ function bindTopbarActions() {
 }
 
 function setSignedInEmail(email) {
-  const safeEmail = escapeHtml(email);
   document.querySelectorAll('[data-admin-email]').forEach((el) => {
-    el.textContent = safeEmail || '—';
+    el.textContent = String(email || '').trim() || '—';
   });
+}
+
+function getPageAccessRequirements() {
+  const roleSource = appShell?.getAttribute('data-admin-roles') || document.body.getAttribute('data-admin-roles') || '';
+  const permissionSource = appShell?.getAttribute('data-admin-permissions') || document.body.getAttribute('data-admin-permissions') || '';
+
+  return {
+    roles: parseRoleList(roleSource),
+    permissions: parsePermissionList(permissionSource)
+  };
+}
+
+function isVisibleForAuthz(el, authz) {
+  const allowedRoles = parseRoleList(el.getAttribute('data-admin-visible') || '');
+  const requiredPermissions = parsePermissionList(el.getAttribute('data-admin-permissions-visible') || '');
+
+  if (allowedRoles.length && !authzHasRole(authz, allowedRoles)) {
+    return false;
+  }
+
+  if (requiredPermissions.length && !authzHasAnyPermission(authz, requiredPermissions)) {
+    return false;
+  }
+
+  return true;
 }
 
 function applyRoleScope(authz = null) {
   const role = String(authz?.role || '').trim().toLowerCase() || 'viewer';
 
   document.querySelectorAll('[data-admin-role]').forEach((el) => {
-    el.textContent = role === 'admin' ? 'Admin' : role === 'captain' ? 'Captain' : 'Viewer';
+    el.textContent = getStaffRoleLabel(role);
   });
 
-  document.querySelectorAll('[data-admin-visible]').forEach((el) => {
-    const allowed = String(el.getAttribute('data-admin-visible') || '')
-      .split(',')
-      .map((value) => value.trim().toLowerCase())
-      .filter(Boolean);
-
-    if (!allowed.length) {
-      el.hidden = false;
-      return;
-    }
-
-    el.hidden = !allowed.includes(role);
+  document.querySelectorAll('[data-admin-visible], [data-admin-permissions-visible]').forEach((el) => {
+    el.hidden = !isVisibleForAuthz(el, authz);
   });
 }
 
@@ -123,8 +144,19 @@ function showAuthorizedApp(user, authz = null) {
         user,
         email: String(user?.email || '').toLowerCase().trim(),
         role: String(authz?.role || '').trim().toLowerCase() || null,
+        roleLabel: authz?.roleLabel || null,
+        active: authz?.active === true,
+        source: authz?.source || null,
+        teamId: authz?.teamId || null,
+        permissions: Array.isArray(authz?.permissions) ? [...authz.permissions] : [],
         allowlisted: authz?.allowlisted === true,
-        captainByClaims: authz?.captainByClaims === true
+        captainByClaims: authz?.captainByClaims === true,
+        isSuperAdmin: authz?.isSuperAdmin === true,
+        isOwner: authz?.isOwner === true,
+        isAdmin: authz?.isAdmin === true,
+        isManager: authz?.isManager === true,
+        isMedia: authz?.isMedia === true,
+        isCaptain: authz?.isCaptain === true
       }
     })
   );
@@ -171,13 +203,16 @@ onAdminAuthState(async (user) => {
 
   renderGate({
     title: 'Checking access',
-    message: 'Verifying admin allowlist…',
+    message: 'Verifying staff access...',
     loading: true
   });
 
   try {
-    const email = String(user.email || '').trim().toLowerCase();
-    const authz = await requireAdminOrCaptain();
+    const requirements = getPageAccessRequirements();
+    const authz = await requireStaffAccess({
+      ...requirements,
+      message: 'This account does not have permission to access this admin page.'
+    });
 
     if (checkToken !== inFlightCheck) return;
 

@@ -1,5 +1,6 @@
 import { db } from '/js/core/firebase.js';
 import { doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+import { requirePermission } from '/js/services/authz.service.js';
 
 const MEDIA_HUB_REF = doc(db, 'siteContent', 'homeMediaHub');
 
@@ -140,6 +141,10 @@ export async function getHomeMediaHubContent() {
 }
 
 export async function saveHomeMediaHubContent(config, updatedBy = null) {
+  await requirePermission('mediaHub:write', {
+    message: 'You are not authorized to publish media hub content.'
+  });
+
   const normalized = normalizeMediaHubConfig(config);
   const currentSnap = await getDoc(MEDIA_HUB_REF);
 

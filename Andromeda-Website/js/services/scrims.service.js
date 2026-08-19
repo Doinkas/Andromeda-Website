@@ -16,7 +16,8 @@ import {
   ref,
   uploadBytes
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js';
-import { requireAdminOrCaptain } from '/js/services/authz.service.js';
+import { requireAnyPermission, requireTeamPermission } from '/js/services/authz.service.js';
+import { canAccessTeam, getScopedTeamId, normalizeTeamId } from '/js/services/staff-roles.js';
 import { logAudit } from '/js/services/audit.service.js';
 
 const matchesRef = collection(db, 'matches');
@@ -119,6 +120,10 @@ export async function uploadMatchScreenshots(type, teamId, matchId, files = [], 
     return [];
   }
 
+  await requireTeamPermission('matches:write', teamId, {
+    message: 'You are not authorized to upload match screenshots for this team.'
+  });
+
   uploads.forEach(validateImageFile);
 
   const urls = [];
@@ -147,10 +152,11 @@ export async function uploadMatchScreenshots(type, teamId, matchId, files = [], 
 }
 
 export async function createMatchDoc(matchData) {
-  const authz = await requireAdminOrCaptain();
-
   const type = normalizeType(matchData.type || 'scrim');
   const teamId = normalizeString(matchData.teamId).toLowerCase();
+  const authz = await requireTeamPermission('matches:write', teamId, {
+    message: 'You are not authorized to create match reports for this team.'
+  });
   const teamName = normalizeString(matchData.teamName);
   const opponentName = normalizeString(matchData.opponentName);
   const replayCode = normalizeString(matchData.replayCode);
@@ -196,10 +202,11 @@ export async function createMatchDoc(matchData) {
 }
 
 export async function createMatchEntry(matchData, files = [], onProgress = null) {
-  const authz = await requireAdminOrCaptain();
-
   const type = normalizeType(matchData.type || 'scrim');
   const teamId = normalizeString(matchData.teamId).toLowerCase();
+  const authz = await requireTeamPermission('matches:write', teamId, {
+    message: 'You are not authorized to create match reports for this team.'
+  });
   const teamName = normalizeString(matchData.teamName);
   const opponentName = normalizeString(matchData.opponentName);
   const replayCode = normalizeString(matchData.replayCode);
@@ -273,8 +280,15 @@ function buildAdminMatchesQuery({ type = null, teamId = null, limit = 20, cursor
 }
 
 export async function listAdminMatches({ type = null, teamId = null, limit = 20, cursor = null } = {}) {
-  await requireAdminOrCaptain();
-  const q = buildAdminMatchesQuery({ type, teamId, limit, cursor });
+  const authz = await requireAnyPermission(['matches:read'], {
+    message: 'You are not authorized to view admin match records.'
+  });
+  const scopedTeamId = getScopedTeamId(authz, teamId);
+  if (scopedTeamId === null || (teamId && !canAccessTeam(authz, normalizeTeamId(teamId)))) {
+    throw new Error('You are not authorized to view matches for this team.');
+  }
+
+  const q = buildAdminMatchesQuery({ type, teamId: scopedTeamId || null, limit, cursor });
   const snapshot = await getDocs(q);
   const items = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
   const nextCursor = snapshot.docs.length ? snapshot.docs[snapshot.docs.length - 1] : null;

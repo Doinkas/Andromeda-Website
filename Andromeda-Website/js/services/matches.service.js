@@ -1,7 +1,16 @@
 import { db } from '/js/core/firebase.js';
-import { requireAdminOrCaptain } from '/js/services/authz.service.js';
+import { requireAnyPermission, requireTeamPermission } from '/js/services/authz.service.js';
+import {
+  canAccessTeam,
+  canAccessTeamTransition,
+  getScopedTeamId,
+  normalizeTeamId
+} from '/js/services/staff-roles.js';
+import { TEAM_IDS } from '/js/config/teams.config.js';
 import { 
   collection, 
+  deleteDoc,
+  getDoc,
   query, 
   where, 
   orderBy,
@@ -45,8 +54,30 @@ function normalizeStringList(value) {
     .filter(Boolean);
 }
 
-async function requireMatchEditor() {
-  return requireAdminOrCaptain();
+async function requireMatchViewer(teamId = '') {
+  const authz = await requireAnyPermission(['matches:read'], {
+    message: 'You are not authorized to view admin match records.'
+  });
+  const normalizedTeamId = normalizeTeamId(teamId);
+
+  if (normalizedTeamId && !canAccessTeam(authz, normalizedTeamId)) {
+    throw new Error('You are not authorized to view matches for this team.');
+  }
+
+  return authz;
+}
+
+async function requireMatchEditor(teamId = '') {
+  const normalizedTeamId = normalizeTeamId(teamId);
+  if (normalizedTeamId) {
+    return requireTeamPermission('matches:write', normalizedTeamId, {
+      message: 'You are not authorized to manage matches for this team.'
+    });
+  }
+
+  return requireAnyPermission(['matches:write'], {
+    message: 'You are not authorized to manage matches.'
+  });
 }
 
 /**
@@ -91,10 +122,18 @@ export async function listMatchesByTeam(teamId, { limit = 10, upcomingOnly = fal
 }
 
 export async function listMatchReportsForAdmin({ limit = 300 } = {}) {
-  await requireMatchEditor();
+  const authz = await requireMatchViewer();
+  const scopedTeamId = getScopedTeamId(authz);
 
   const safeLimit = Math.min(Math.max(Number(limit) || 300, 1), 500);
-  const q = query(matchesRef, orderBy('createdAt', 'desc'), fbLimit(safeLimit));
+  const constraints = [];
+  if (scopedTeamId) {
+    constraints.push(where('teamId', '==', scopedTeamId));
+  }
+  constraints.push(orderBy('createdAt', 'desc'));
+  constraints.push(fbLimit(safeLimit));
+
+  const q = query(matchesRef, ...constraints);
   const snapshot = await getDocs(q);
 
   return snapshot.docs
@@ -156,11 +195,16 @@ export async function listRecentOfficialMatches({ limit = 3 } = {}) {
 }
 
 export async function listAdminMatches({ teamId, limit = 50, upcomingOnly = true } = {}) {
-  await requireMatchEditor();
+  const authz = await requireMatchViewer(teamId);
+  const scopedTeamId = getScopedTeamId(authz, teamId);
+
+  if (scopedTeamId === null) {
+    throw new Error('You are not authorized to view matches for this team.');
+  }
 
   const constraints = [];
-  if (teamId) {
-    constraints.push(where('teamId', '==', teamId));
+  if (scopedTeamId) {
+    constraints.push(where('teamId', '==', scopedTeamId));
   }
   if (upcomingOnly) {
     constraints.push(where('scheduledAt', '>=', Timestamp.now()));
@@ -214,26 +258,52 @@ export function buildMatchId({ teamId, scheduledAt, opponent }) {
  * @returns {Promise<void>}
  */
 export async function upsertMatches(matches, performedByEmail = null) {
-  await requireMatchEditor();
-
   if (!matches || matches.length === 0) {
     return;
   }
 
-  const batch = writeBatch(db);
-  
-  for (const match of matches) {
+  const authz = await requireMatchEditor();
+  const invalidTeam = matches
+    .map((match) => normalizeTeamId(match.teamId))
+    .find((teamId) => !TEAM_IDS.includes(teamId));
+  if (invalidTeam !== undefined) {
+    throw new Error('Every imported match must use a valid Andromeda team.');
+  }
+
+  const unauthorizedTeam = matches
+    .map((match) => normalizeTeamId(match.teamId))
+    .find((teamId) => !canAccessTeam(authz, teamId));
+
+  if (unauthorizedTeam) {
+    throw new Error(`You are not authorized to import matches for ${unauthorizedTeam}.`);
+  }
+
+  const preparedMatches = matches.map((match) => {
     const matchId = buildMatchId({
       teamId: match.teamId,
       scheduledAt: match.scheduledAt,
       opponent: match.opponent
     });
-    
-    const matchRef = doc(db, 'matches', matchId);
-    
+    return { match, matchId, matchRef: doc(db, 'matches', matchId) };
+  });
+  const existingSnapshots = await Promise.all(
+    preparedMatches.map(({ matchRef }) => getDoc(matchRef))
+  );
+
+  existingSnapshots.forEach((snapshot, index) => {
+    if (!snapshot.exists()) return;
+    const currentTeamId = normalizeTeamId(snapshot.data()?.teamId);
+    const nextTeamId = normalizeTeamId(preparedMatches[index].match.teamId);
+    if (!canAccessTeamTransition(authz, currentTeamId, nextTeamId)) {
+      throw new Error('You are not authorized to replace an existing match for another team.');
+    }
+  });
+
+  const batch = writeBatch(db);
+  for (const { match, matchRef } of preparedMatches) {
     batch.set(matchRef, {
       type: 'official',
-      teamId: match.teamId,
+      teamId: normalizeTeamId(match.teamId),
       opponent: match.opponent,
       opponentName: match.opponent,
       eventName: normalizeString(match.eventName || match.tournamentName) || null,
@@ -250,6 +320,7 @@ export async function upsertMatches(matches, performedByEmail = null) {
 }
 
 export async function clearImportedScheduleMatches(teamIds = []) {
+  const authz = await requireMatchEditor();
   const normalizedTeamIds = Array.from(new Set(
     (Array.isArray(teamIds) ? teamIds : [])
       .map((teamId) => normalizeString(teamId).toLowerCase())
@@ -260,7 +331,19 @@ export async function clearImportedScheduleMatches(teamIds = []) {
     return 0;
   }
 
-  const scheduleQuery = query(matchesRef, where('source', '==', 'schedule.html'));
+  const unauthorizedTeam = normalizedTeamIds.find((teamId) => !canAccessTeam(authz, teamId));
+  if (unauthorizedTeam) {
+    throw new Error(`You are not authorized to clear matches for ${unauthorizedTeam}.`);
+  }
+
+  const scopedTeamId = getScopedTeamId(authz);
+  const scheduleQuery = scopedTeamId
+    ? query(
+        matchesRef,
+        where('teamId', '==', scopedTeamId),
+        where('source', '==', 'schedule.html')
+      )
+    : query(matchesRef, where('source', '==', 'schedule.html'));
   const snapshot = await getDocs(scheduleQuery);
 
   const docsToDelete = snapshot.docs.filter((docSnap) => {
@@ -285,11 +368,15 @@ export async function clearImportedScheduleMatches(teamIds = []) {
 }
 
 export async function saveAdminMatch(match, performedByEmail = null) {
-  await requireMatchEditor();
-
   if (!match || !match.teamId || !match.opponent || !match.scheduledAt) {
     throw new Error('Match team, opponent, and date/time are required');
   }
+
+  const teamId = normalizeTeamId(match.teamId);
+  if (!TEAM_IDS.includes(teamId)) {
+    throw new Error('Select a valid Andromeda team.');
+  }
+  const authz = await requireMatchEditor(teamId);
 
   const scheduledDate = match.scheduledAt instanceof Date
     ? match.scheduledAt
@@ -306,9 +393,17 @@ export async function saveAdminMatch(match, performedByEmail = null) {
   });
 
   const matchDoc = doc(db, 'matches', matchId);
+  const existing = await getDoc(matchDoc);
+  if (existing.exists()) {
+    const currentTeamId = normalizeTeamId(existing.data()?.teamId);
+    if (!canAccessTeamTransition(authz, currentTeamId, teamId)) {
+      throw new Error('You are not authorized to move or update this match.');
+    }
+  }
+
   await setDoc(matchDoc, {
     type: match.type || 'official',
-    teamId: match.teamId,
+    teamId,
     opponent: match.opponent,
     opponentName: match.opponent,
     eventName: normalizeString(match.eventName || match.tournamentName) || null,
@@ -329,4 +424,24 @@ export async function saveAdminMatch(match, performedByEmail = null) {
   }, { merge: true });
 
   return matchId;
+}
+
+export async function deleteAdminMatch(matchId) {
+  const normalizedMatchId = normalizeString(matchId);
+  if (!normalizedMatchId) {
+    throw new Error('Match ID is required.');
+  }
+
+  const matchRef = doc(db, 'matches', normalizedMatchId);
+  const snapshot = await getDoc(matchRef);
+  if (!snapshot.exists()) {
+    throw new Error('Match not found.');
+  }
+
+  const teamId = normalizeTeamId(snapshot.data()?.teamId);
+  if (!TEAM_IDS.includes(teamId)) {
+    throw new Error('This match does not have a valid Andromeda team.');
+  }
+  await requireMatchEditor(teamId);
+  await deleteDoc(matchRef);
 }

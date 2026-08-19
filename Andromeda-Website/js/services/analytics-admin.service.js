@@ -6,10 +6,15 @@ import {
   orderBy,
   query
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+import { requirePermission } from '/js/services/authz.service.js';
 
 const ANALYTICS_EVENTS_REF = collection(db, 'analyticsEvents');
 
 export async function listAnalyticsEvents({ maxItems = 5000 } = {}) {
+  await requirePermission('analytics:read', {
+    message: 'You are not authorized to view analytics.'
+  });
+
   const normalizedLimit = Number.isFinite(Number(maxItems)) ? Math.min(5000, Math.max(100, Number(maxItems))) : 5000;
 
   const eventsQuery = query(

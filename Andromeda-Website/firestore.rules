@@ -1,0 +1,581 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function authEmail() {
+      return request.auth.token.get('email', '').lower();
+    }
+
+    function emailVerified() {
+      return signedIn()
+        && request.auth.token.get('email_verified', false) == true
+        && authEmail() != '';
+    }
+
+    function staffPath() {
+      return /databases/$(database)/documents/staffAccess/$(request.auth.uid);
+    }
+
+    function staffInvitePath(inviteId) {
+      return /databases/$(database)/documents/staffInvites/$(inviteId);
+    }
+
+    function hasStaffAccessRecord() {
+      return signedIn() && exists(staffPath());
+    }
+
+    function staffData() {
+      return get(staffPath()).data;
+    }
+
+    function activeStaffHasAnyRole(roles) {
+      return hasStaffAccessRecord()
+        && staffData().active == true
+        && (
+          staffData().role == 'superadmin'
+          || staffData().role in roles
+        );
+    }
+
+    function tokenHasAnyRole(roles) {
+      let tokenRole = request.auth.token.get('role', '');
+      let tokenRoles = request.auth.token.get('roles', []);
+      return signedIn()
+        && (
+          tokenRole == 'superadmin'
+          || tokenRole in roles
+          || (
+            tokenRoles is list
+            && (
+              tokenRoles.hasAny(['superadmin'])
+              || tokenRoles.hasAny(roles)
+            )
+          )
+          || ('captain' in roles && request.auth.token.get('captain', false) == true)
+        );
+    }
+
+    function isLegacyAllowlistedAdmin() {
+      return signedIn()
+        && authEmail() != ''
+        && exists(/databases/$(database)/documents/config/adminAllowlist)
+        && get(/databases/$(database)/documents/config/adminAllowlist).data.emails.get(authEmail(), false) == true;
+    }
+
+    function hasAnyRole(roles) {
+      return activeStaffHasAnyRole(roles)
+        || (
+          !hasStaffAccessRecord()
+          && (
+            ('admin' in roles && isLegacyAllowlistedAdmin())
+            || tokenHasAnyRole(roles)
+          )
+        );
+    }
+
+    function hasAnyAdminRole() {
+      return hasAnyRole(['owner', 'admin']);
+    }
+
+    function validStaffRole(role) {
+      return role in ['superadmin', 'owner', 'admin', 'media', 'manager', 'captain'];
+    }
+
+    function operationalStaffRole(role) {
+      return role in ['media', 'manager', 'captain'];
+    }
+
+    function teamRelevantStaffRole(role) {
+      return role in ['manager', 'captain'];
+    }
+
+    function validTeamId(teamId) {
+      return teamId is string
+        && teamId in [
+          'horizon',
+          'spiral',
+          'proxima',
+          'comet',
+          'supernova',
+          'void',
+          'polaris',
+          'octantis'
+        ];
+    }
+
+    function assignedTeamMatches(teamId) {
+      return validTeamId(teamId)
+        && (
+          (
+            hasStaffAccessRecord()
+            && staffData().active == true
+            && staffData().teamId == teamId
+          )
+          || (
+            !hasStaffAccessRecord()
+            && (
+              request.auth.token.get('teamId', '') == teamId
+              || request.auth.token.get('team_id', '') == teamId
+            )
+          )
+        );
+    }
+
+    function canManageTeam(teamId) {
+      return validTeamId(teamId)
+        && (
+          hasAnyRole(['owner', 'admin'])
+          || (
+            hasAnyRole(['manager', 'captain'])
+            && assignedTeamMatches(teamId)
+          )
+        );
+    }
+
+    function canManageManagerTeam(teamId) {
+      return validTeamId(teamId)
+        && (
+          hasAnyRole(['owner', 'admin'])
+          || (
+            hasAnyRole(['manager'])
+            && assignedTeamMatches(teamId)
+          )
+        );
+    }
+
+    function rosterTeamId(teamId) {
+      return teamId == 'faceit' ? 'octantis' : teamId;
+    }
+
+    function canManageRoster(teamId) {
+      return (validTeamId(teamId) || teamId == 'faceit')
+        && canManageManagerTeam(rosterTeamId(teamId));
+    }
+
+    function validStaffAccessData() {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'email',
+          'role',
+          'active',
+          'teamId',
+          'createdAt',
+          'updatedAt',
+          'lastModifiedBy',
+          'inviteId',
+          'deactivatedAt',
+          'deactivatedBy'
+        ])
+        && request.resource.data.keys().hasAll([
+          'name',
+          'email',
+          'role',
+          'active',
+          'teamId',
+          'createdAt',
+          'updatedAt',
+          'lastModifiedBy'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.email == request.resource.data.email.lower()
+        && validStaffRole(request.resource.data.role)
+        && request.resource.data.active is bool
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && (
+          request.resource.data.lastModifiedBy == null
+          || request.resource.data.lastModifiedBy is string
+        )
+        && (
+          (
+            teamRelevantStaffRole(request.resource.data.role)
+            && validTeamId(request.resource.data.teamId)
+          )
+          || (
+            !teamRelevantStaffRole(request.resource.data.role)
+            && request.resource.data.teamId == null
+          )
+        )
+        && (
+          request.resource.data.get('inviteId', null) == null
+          || request.resource.data.inviteId is string
+        )
+        && (
+          request.resource.data.get('deactivatedAt', null) == null
+          || request.resource.data.deactivatedAt is timestamp
+        )
+        && (
+          request.resource.data.get('deactivatedBy', null) == null
+          || request.resource.data.deactivatedBy is string
+        );
+    }
+
+    function validStaffInviteData() {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'email',
+          'role',
+          'teamId',
+          'status',
+          'createdAt',
+          'updatedAt',
+          'createdByUid',
+          'createdByEmail',
+          'acceptedAt',
+          'acceptedByUid',
+          'revokedAt',
+          'revokedByUid'
+        ])
+        && request.resource.data.keys().hasAll([
+          'name',
+          'email',
+          'role',
+          'teamId',
+          'status',
+          'createdAt',
+          'updatedAt',
+          'createdByUid',
+          'createdByEmail',
+          'acceptedAt',
+          'acceptedByUid',
+          'revokedAt',
+          'revokedByUid'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.email == request.resource.data.email.lower()
+        && validStaffRole(request.resource.data.role)
+        && (
+          (
+            teamRelevantStaffRole(request.resource.data.role)
+            && validTeamId(request.resource.data.teamId)
+          )
+          || (
+            !teamRelevantStaffRole(request.resource.data.role)
+            && request.resource.data.teamId == null
+          )
+        )
+        && request.resource.data.status in ['pending', 'accepted', 'revoked']
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.createdByUid is string
+        && (
+          request.resource.data.createdByEmail == null
+          || request.resource.data.createdByEmail is string
+        )
+        && (
+          request.resource.data.acceptedAt == null
+          || request.resource.data.acceptedAt is timestamp
+        )
+        && (
+          request.resource.data.acceptedByUid == null
+          || request.resource.data.acceptedByUid is string
+        )
+        && (
+          request.resource.data.revokedAt == null
+          || request.resource.data.revokedAt is timestamp
+        )
+        && (
+          request.resource.data.revokedByUid == null
+          || request.resource.data.revokedByUid is string
+        );
+    }
+
+    function canManageStaffInvites() {
+      return hasAnyRole(['owner']);
+    }
+
+    function managementCreatesInvite() {
+      return validStaffInviteData()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.createdByEmail == authEmail()
+        && request.resource.data.acceptedAt == null
+        && request.resource.data.acceptedByUid == null
+        && request.resource.data.revokedAt == null
+        && request.resource.data.revokedByUid == null
+        && (
+          hasAnyRole(['superadmin'])
+          || (hasAnyRole(['owner']) && operationalStaffRole(request.resource.data.role))
+        );
+    }
+
+    function managementRevokesInvite() {
+      return validStaffInviteData()
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'revoked'
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.revokedAt == request.time
+        && request.resource.data.revokedByUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'updatedAt',
+          'revokedAt',
+          'revokedByUid'
+        ])
+        && (
+          hasAnyRole(['superadmin'])
+          || (
+            hasAnyRole(['owner'])
+            && operationalStaffRole(resource.data.role)
+            && operationalStaffRole(request.resource.data.role)
+          )
+        );
+    }
+
+    function inviteeAcceptsInvite(inviteId) {
+      return emailVerified()
+        && resource.data.email == authEmail()
+        && resource.data.status == 'pending'
+        && validStaffInviteData()
+        && request.resource.data.status == 'accepted'
+        && request.resource.data.acceptedAt == request.time
+        && request.resource.data.acceptedByUid == request.auth.uid
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'acceptedAt',
+          'acceptedByUid',
+          'updatedAt'
+        ])
+        && existsAfter(staffPath())
+        && getAfter(staffPath()).data.inviteId == inviteId;
+    }
+
+    function inviteeClaimsStaffAccess(staffUid) {
+      let inviteId = request.resource.data.get('inviteId', '');
+      let invitePath = staffInvitePath(inviteId);
+      return emailVerified()
+        && request.auth.uid == staffUid
+        && inviteId != ''
+        && exists(invitePath)
+        && existsAfter(invitePath)
+        && get(invitePath).data.status == 'pending'
+        && get(invitePath).data.email == authEmail()
+        && getAfter(invitePath).data.status == 'accepted'
+        && getAfter(invitePath).data.acceptedByUid == request.auth.uid
+        && request.resource.data.email == authEmail()
+        && request.resource.data.role == get(invitePath).data.role
+        && request.resource.data.teamId == get(invitePath).data.teamId
+        && request.resource.data.active == true
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lastModifiedBy == authEmail()
+        && request.resource.data.get('deactivatedAt', null) == null
+        && request.resource.data.get('deactivatedBy', null) == null;
+    }
+
+    function ownerUpdatesOperationalStaff() {
+      return hasAnyRole(['owner'])
+        && operationalStaffRole(resource.data.role)
+        && operationalStaffRole(request.resource.data.role)
+        && request.resource.data.email == resource.data.email
+        && (
+          request.resource.data.createdAt == resource.data.get('createdAt', null)
+          || (
+            resource.data.get('createdAt', null) == null
+            && request.resource.data.createdAt == request.time
+          )
+        )
+        && request.resource.data.get('inviteId', null) == resource.data.get('inviteId', null)
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lastModifiedBy == authEmail()
+        && (
+          (
+            request.resource.data.active == true
+            && request.resource.data.get('deactivatedAt', null) == null
+            && request.resource.data.get('deactivatedBy', null) == null
+          )
+          || (
+            resource.data.active == false
+            && request.resource.data.active == false
+            && request.resource.data.get('deactivatedAt', null) == resource.data.get('deactivatedAt', null)
+            && request.resource.data.get('deactivatedBy', null) == resource.data.get('deactivatedBy', null)
+          )
+          || (
+            resource.data.active == true
+            && request.resource.data.active == false
+            && request.resource.data.deactivatedAt == request.time
+            && request.resource.data.deactivatedBy == authEmail()
+          )
+        )
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name',
+          'role',
+          'active',
+          'teamId',
+          'createdAt',
+          'updatedAt',
+          'lastModifiedBy',
+          'deactivatedAt',
+          'deactivatedBy'
+        ]);
+    }
+
+    function validAnalyticsEvent() {
+      return request.resource.data.keys().hasOnly([
+          'eventName',
+          'pagePath',
+          'pageTitle',
+          'sessionId',
+          'teamId',
+          'platform',
+          'destination',
+          'label',
+          'section',
+          'ctaHref',
+          'error',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'eventName',
+          'pagePath',
+          'sessionId',
+          'createdAt'
+        ])
+        && request.resource.data.eventName is string
+        && request.resource.data.eventName.size() > 0
+        && request.resource.data.eventName.size() <= 80
+        && request.resource.data.pagePath is string
+        && request.resource.data.pagePath.size() > 0
+        && request.resource.data.pagePath.size() <= 180
+        && request.resource.data.sessionId is string
+        && request.resource.data.sessionId.size() > 0
+        && request.resource.data.sessionId.size() <= 80
+        && optionalStringWithin(request.resource.data.get('pageTitle', null), 180)
+        && optionalStringWithin(request.resource.data.get('teamId', null), 40)
+        && optionalStringWithin(request.resource.data.get('platform', null), 40)
+        && optionalStringWithin(request.resource.data.get('destination', null), 180)
+        && optionalStringWithin(request.resource.data.get('label', null), 140)
+        && optionalStringWithin(request.resource.data.get('section', null), 80)
+        && optionalStringWithin(request.resource.data.get('ctaHref', null), 200)
+        && optionalStringWithin(request.resource.data.get('error', null), 220)
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt == request.time;
+    }
+
+    function optionalStringWithin(value, maxLength) {
+      return value == null || (value is string && value.size() <= maxLength);
+    }
+
+    match /staffAccess/{staffUid} {
+      allow get: if signedIn() && (request.auth.uid == staffUid || hasAnyAdminRole());
+      allow list: if hasAnyAdminRole();
+      allow create: if validStaffAccessData()
+        && (hasAnyRole(['superadmin']) || inviteeClaimsStaffAccess(staffUid));
+      allow update: if validStaffAccessData()
+        && (hasAnyRole(['superadmin']) || ownerUpdatesOperationalStaff());
+      allow delete: if hasAnyRole(['superadmin']);
+    }
+
+    match /staffInvites/{inviteId} {
+      allow get: if canManageStaffInvites()
+        || (
+          emailVerified()
+          && resource.data.email == authEmail()
+          && resource.data.status == 'pending'
+        );
+      allow list: if canManageStaffInvites()
+        || (
+          emailVerified()
+          && resource.data.email == authEmail()
+          && resource.data.status == 'pending'
+          && request.query.limit <= 1
+        );
+      allow create: if managementCreatesInvite();
+      allow update: if managementRevokesInvite() || inviteeAcceptsInvite(inviteId);
+      allow delete: if hasAnyRole(['superadmin']);
+    }
+
+    match /config/adminAllowlist {
+      allow get: if signedIn()
+        && (
+          activeStaffHasAnyRole(['superadmin'])
+          || (
+            !hasStaffAccessRecord()
+            && authEmail() != ''
+            && resource.data.emails.get(authEmail(), false) == true
+          )
+        );
+      allow list: if activeStaffHasAnyRole(['superadmin']);
+      allow create, update, delete: if hasAnyRole(['superadmin']);
+    }
+
+    match /config/{configId} {
+      allow read, write: if false;
+    }
+
+    match /rosters/{teamId} {
+      allow read: if true;
+      allow create, update: if validTeamId(teamId) && canManageManagerTeam(teamId);
+      allow delete: if canManageRoster(teamId);
+    }
+
+    match /trials/{trialId} {
+      allow read: if canManageManagerTeam(resource.data.teamId);
+      allow create: if canManageManagerTeam(request.resource.data.teamId);
+      allow update: if canManageManagerTeam(resource.data.teamId)
+        && canManageManagerTeam(request.resource.data.teamId)
+        && (
+          hasAnyRole(['owner', 'admin'])
+          || resource.data.teamId == request.resource.data.teamId
+        );
+      allow delete: if canManageManagerTeam(resource.data.teamId);
+    }
+
+    match /matches/{matchId} {
+      allow read: if resource.data.type == 'official' || canManageTeam(resource.data.teamId);
+      allow create: if canManageTeam(request.resource.data.teamId);
+      allow update: if canManageTeam(resource.data.teamId)
+        && canManageTeam(request.resource.data.teamId)
+        && (
+          hasAnyRole(['owner', 'admin'])
+          || resource.data.teamId == request.resource.data.teamId
+        );
+      allow delete: if canManageTeam(resource.data.teamId);
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow create, update, delete: if hasAnyRole(['owner', 'admin']);
+    }
+
+    match /tournaments/{tournamentId} {
+      allow read: if resource.data.isPublished == true || hasAnyRole(['owner', 'admin']);
+      allow create, update, delete: if hasAnyRole(['owner', 'admin']);
+    }
+
+    match /siteContent/homeMediaHub {
+      allow read: if true;
+      allow create, update, delete: if hasAnyRole(['owner', 'admin', 'media']);
+    }
+
+    match /siteContent/{contentId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /analyticsEvents/{eventId} {
+      allow create: if validAnalyticsEvent();
+      allow read: if hasAnyRole(['owner', 'admin', 'media']);
+      allow update, delete: if false;
+    }
+
+    match /auditLogs/{auditId} {
+      allow create: if hasAnyRole(['owner', 'admin', 'media', 'manager', 'captain']);
+      allow read: if hasAnyAdminRole();
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

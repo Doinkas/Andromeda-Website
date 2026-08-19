@@ -142,7 +142,7 @@ function parseDateInput(value, isEnd = false) {
 async function loadLogs() {
   if (!hasAdminAccess) {
     renderRows([]);
-    setStatus('Only allowlisted admins can view audit logs.', true);
+    setStatus('Your role cannot view audit logs.', true);
     return;
   }
 
@@ -184,6 +184,7 @@ clearButton.addEventListener('click', async () => {
 });
 
 window.addEventListener('admin:authorized', async (event) => {
-  hasAdminAccess = event?.detail?.allowlisted === true;
+  const permissions = Array.isArray(event?.detail?.permissions) ? event.detail.permissions : [];
+  hasAdminAccess = permissions.includes('auditLogs:read');
   await loadLogs();
 });
