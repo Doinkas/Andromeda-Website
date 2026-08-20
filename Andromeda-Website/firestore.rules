@@ -461,6 +461,40 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
+    function validAuditLogData() {
+      return request.resource.data.keys().hasOnly([
+          'action',
+          'targetCollection',
+          'targetId',
+          'actorUid',
+          'performedBy',
+          'performedAt',
+          'before',
+          'after',
+          'meta'
+        ])
+        && request.resource.data.keys().hasAll([
+          'action',
+          'targetCollection',
+          'targetId',
+          'actorUid',
+          'performedBy',
+          'performedAt'
+        ])
+        && request.resource.data.action is string
+        && request.resource.data.action.size() > 0
+        && request.resource.data.action.size() <= 100
+        && request.resource.data.targetCollection is string
+        && request.resource.data.targetCollection.size() > 0
+        && request.resource.data.targetCollection.size() <= 100
+        && request.resource.data.targetId is string
+        && request.resource.data.targetId.size() > 0
+        && request.resource.data.targetId.size() <= 200
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.performedBy == authEmail()
+        && request.resource.data.performedAt == request.time;
+    }
+
     function optionalStringWithin(value, maxLength) {
       return value == null || (value is string && value.size() <= maxLength);
     }
@@ -558,8 +592,7 @@ service cloud.firestore {
     }
 
     match /siteContent/{contentId} {
-      allow read: if true;
-      allow write: if false;
+      allow read, write: if false;
     }
 
     match /analyticsEvents/{eventId} {
@@ -569,7 +602,8 @@ service cloud.firestore {
     }
 
     match /auditLogs/{auditId} {
-      allow create: if hasAnyRole(['owner', 'admin', 'media', 'manager', 'captain']);
+      allow create: if hasAnyRole(['owner', 'admin', 'media', 'manager', 'captain'])
+        && validAuditLogData();
       allow read: if hasAnyAdminRole();
       allow update, delete: if false;
     }

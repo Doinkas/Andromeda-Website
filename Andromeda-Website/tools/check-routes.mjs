@@ -7,6 +7,7 @@ const root = process.cwd();
 const routes = [
   '/',
   '/index.html',
+  '/404.html',
   '/pages/teams.html',
   '/pages/team.html',
   '/pages/tournaments.html',
@@ -34,8 +35,14 @@ const server = createServer(async (request, response) => {
     response.writeHead(200);
     response.end(data);
   } catch {
-    response.writeHead(404);
-    response.end('not found');
+    try {
+      const data = await readFile(join(root, '404.html'));
+      response.writeHead(404);
+      response.end(data);
+    } catch {
+      response.writeHead(404);
+      response.end('not found');
+    }
   }
 });
 
@@ -51,7 +58,10 @@ function close() {
 
 async function requestRoute(port, route) {
   const response = await fetch(`http://127.0.0.1:${port}${route}`);
-  return response.status;
+  return {
+    status: response.status,
+    body: await response.text()
+  };
 }
 
 const port = await listen();
@@ -59,8 +69,16 @@ const failures = [];
 
 try {
   for (const route of routes) {
-    const status = await requestRoute(port, route);
-    if (status !== 200) failures.push(`${route} -> ${status}`);
+    const result = await requestRoute(port, route);
+    if (result.status !== 200) failures.push(`${route} -> ${result.status}`);
+  }
+
+  const unknownRoute = await requestRoute(port, '/this-page-does-not-exist');
+  if (unknownRoute.status !== 404) {
+    failures.push(`/this-page-does-not-exist -> ${unknownRoute.status}`);
+  }
+  if (!unknownRoute.body.includes('Page Not Found | Andromeda Esports')) {
+    failures.push('/this-page-does-not-exist -> missing branded 404 content');
   }
 } finally {
   await close();
@@ -71,4 +89,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Checked ${routes.length} routes.`);
+console.log(`Checked ${routes.length} routes and branded 404 handling.`);

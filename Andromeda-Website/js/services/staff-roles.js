@@ -146,6 +146,24 @@ export function roleRequiresTeamAssignment(role) {
   return ['manager', 'captain'].includes(normalizeStaffRole(role));
 }
 
+export function shouldShowStaffDashboard({ user = null, staffRecord = null } = {}) {
+  const uid = String(user?.uid || '').trim();
+  if (!uid || !staffRecord || typeof staffRecord !== 'object') return false;
+
+  const profile = normalizeStaffRecord(staffRecord, {
+    uid,
+    email: user?.email,
+    name: user?.displayName
+  });
+  if (!profile.active || !profile.role) return false;
+
+  if (roleRequiresTeamAssignment(profile.role)) {
+    return isValidTeamId(profile.teamId);
+  }
+
+  return profile.teamId === null;
+}
+
 export function getStaffRoleLabel(role) {
   const normalized = normalizeStaffRole(role);
   return normalized ? STAFF_ROLE_LABELS[normalized] : 'Viewer';

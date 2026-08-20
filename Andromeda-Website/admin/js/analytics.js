@@ -35,6 +35,15 @@ function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(Number(value) || 0);
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 function formatPath(path) {
   const value = String(path || '/').trim();
   if (value === '/') return '/ (home)';
@@ -70,12 +79,12 @@ function renderRankedList(name, entries, emptyLabel = 'No data yet') {
   if (!node) return;
 
   if (!entries.length) {
-    node.innerHTML = `<li>${emptyLabel}</li>`;
+    node.innerHTML = `<li>${escapeHtml(emptyLabel)}</li>`;
     return;
   }
 
   node.innerHTML = entries
-    .map(([label, count]) => `<li><strong>${formatNumber(count)}</strong> - ${label}</li>`)
+    .map(([label, count]) => `<li><strong>${formatNumber(count)}</strong> - ${escapeHtml(label)}</li>`)
     .join('');
 }
 
@@ -92,9 +101,9 @@ function renderRecentEvents(events) {
 
     return `
       <tr>
-        <td>${formatEventName(event.eventName)}</td>
-        <td>${formatPath(event.pagePath)}</td>
-        <td>${detail}</td>
+        <td>${escapeHtml(formatEventName(event.eventName))}</td>
+        <td>${escapeHtml(formatPath(event.pagePath))}</td>
+        <td>${escapeHtml(detail)}</td>
       </tr>
     `;
   }).join('');

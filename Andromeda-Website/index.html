@@ -18,16 +18,23 @@
 
   <!-- HEADER: top of the page -->
   <header>
-    <nav>
+    <nav class="site-nav" data-site-nav>
       <a class="brand-mark" href="index.html" aria-label="Andromeda Esports home">
         <img class="brand-mark__logo" src="images/branding/andro-org.png" alt="Andromeda Esports logo" onerror="this.style.display='none'">
         <span class="brand-mark__text">Andromeda Esports</span>
       </a>
-      <a href="pages/teams.html">Teams</a>
-      <a href="pages/schedule.html">Schedule</a>
-      <a href="pages/tournaments.html">Competition</a>
-      <a href="pages/merch.html">Merch</a>
-      <a href="pages/contact.html">About</a>
+      <button class="site-nav__toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="site-nav-menu" data-site-nav-toggle>
+        <span class="site-nav__toggle-bar" aria-hidden="true"></span>
+        <span class="site-nav__toggle-bar" aria-hidden="true"></span>
+        <span class="site-nav__toggle-bar" aria-hidden="true"></span>
+      </button>
+      <div class="site-nav__links" id="site-nav-menu" data-site-nav-menu>
+        <a href="pages/teams.html">Teams</a>
+        <a href="pages/schedule.html">Schedule</a>
+        <a href="pages/tournaments.html">Competition</a>
+        <a class="nav-merch" href="pages/merch.html">Merch</a>
+        <a href="pages/contact.html">About</a>
+      </div>
     </nav>
   </header>
 
@@ -139,7 +146,7 @@
                 </div>
               </div>
               <aside class="dev-slide__visual" data-media-icon="0" aria-hidden="true">
-                <img src="images/branding/andro-org.png" alt="">
+                <img src="images/branding/andro-org.png" alt="" loading="lazy" decoding="async">
               </aside>
             </article>
 
@@ -154,7 +161,7 @@
                 </div>
               </div>
               <aside class="dev-slide__visual" data-media-icon="1" aria-hidden="true">
-                <img src="images/branding/andro-org.png" alt="">
+                <img src="images/branding/andro-org.png" alt="" loading="lazy" decoding="async">
               </aside>
             </article>
 
@@ -172,7 +179,7 @@
                 </div>
               </div>
               <aside class="dev-slide__visual" data-media-icon="2" aria-hidden="true">
-                <img src="images/branding/andro-org.png" alt="">
+                <img src="images/branding/andro-org.png" alt="" loading="lazy" decoding="async">
               </aside>
             </article>
           </div>
@@ -247,6 +254,8 @@
     </div>
   </footer>
 
+  <script type="module" src="/js/site-navigation.js"></script>
+  <script type="module" src="/js/pages/staff-dashboard-nav.js"></script>
   <script type="module" src="js/home-tournaments.js"></script>
   <script type="module" src="js/pages/home-team-showcase.js"></script>
   <script type="module" src="js/pages/home-devpath-carousel.js"></script>

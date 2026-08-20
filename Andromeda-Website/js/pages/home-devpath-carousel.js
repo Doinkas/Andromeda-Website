@@ -1,4 +1,4 @@
-import { getHomeMediaHubContent } from '/js/services/media-hub.service.js';
+import { getHomeMediaHubContent, normalizeSafeLinkHref } from '/js/services/media-hub.service.js';
 
 const root = document.querySelector('[data-module="devpath-carousel"]');
 
@@ -99,7 +99,7 @@ if (!root) {
         actionsEl.innerHTML = '';
         actions.forEach((action) => {
           const label = String(action?.label || '').trim();
-          const href = String(action?.href || '').trim();
+          const href = normalizeSafeLinkHref(action?.href);
           if (!label || !href) return;
 
           const link = document.createElement('a');
@@ -136,6 +136,8 @@ if (!root) {
         const img = document.createElement('img');
         img.src = icon;
         img.alt = mediaAlt;
+        img.loading = 'lazy';
+        img.decoding = 'async';
         asideEl.appendChild(img);
       } else {
         const span = document.createElement('span');

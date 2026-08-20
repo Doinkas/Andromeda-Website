@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
   <title>Andromeda Admin Calendar</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/admin.css">
@@ -66,6 +67,12 @@
       border-color: var(--accent-primary);
     }
 
+    .calendar-day:focus-visible,
+    .calendar-day-event:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
+    }
+
     .calendar-day.other-month {
       opacity: 0.3;
       cursor: default;
@@ -109,6 +116,9 @@
       font-size: 0.62rem;
       line-height: 1.15;
       transition: all 0.2s;
+      width: 100%;
+      font-family: inherit;
+      text-align: left;
     }
 
     .calendar-day-event:hover {
@@ -542,8 +552,72 @@
     }
 
     @media (max-width: 600px) {
+      .calendar-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .calendar-weekday {
+        display: none;
+      }
+
       .calendar-day {
-        font-size: 0.6rem;
+        min-height: 82px;
+        font-size: 0.72rem;
+      }
+
+      .calendar-day-event {
+        white-space: normal;
+      }
+
+      .calendar-day-detail__item {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .calendar-filter,
+      .calendar-tabs,
+      .form-actions,
+      .import-actions {
+        align-items: stretch;
+        width: 100%;
+      }
+
+      .calendar-filter select,
+      .import-field input,
+      .import-field select,
+      .import-field textarea,
+      .form-group input,
+      .form-group select,
+      .form-group textarea,
+      .admin-btn {
+        min-height: 44px;
+        font-size: 1rem;
+      }
+
+      .calendar-tabs {
+        display: grid;
+        border-radius: 0.75rem;
+      }
+
+      .calendar-tab,
+      .form-actions .admin-btn,
+      .import-actions .admin-btn {
+        width: 100%;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-overlay {
+        align-items: flex-start;
+        padding: 0.75rem;
+      }
+
+      .modal {
+        width: 100%;
+        max-height: calc(100vh - 1.5rem);
+        padding: 1rem;
       }
 
       .calendar-nav {
@@ -551,8 +625,9 @@
       }
 
       .calendar-nav button {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.7rem;
+        min-height: 44px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
       }
     }
   </style>
@@ -686,7 +761,7 @@
     <div class="modal">
       <div class="modal-header">
         <h2 id="modal-match-title">Add Item</h2>
-        <button type="button" class="modal-close" id="modal-close">&times;</button>
+        <button type="button" class="modal-close" id="modal-close" aria-label="Close match editor">&times;</button>
       </div>
 
       <form class="match-form" id="match-edit-form">

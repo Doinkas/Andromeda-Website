@@ -18,6 +18,21 @@ gateRoot.id = 'adminGate';
 gateRoot.className = 'admin-gate';
 document.body.appendChild(gateRoot);
 
+function addHomeLink() {
+  document.querySelectorAll('.admin-user').forEach((adminUser) => {
+    if (adminUser.querySelector('[data-admin-home]')) return;
+
+    const homeLink = document.createElement('a');
+    homeLink.href = '/';
+    homeLink.className = 'admin-btn admin-btn--secondary';
+    homeLink.textContent = 'Back to Home';
+    homeLink.dataset.adminHome = 'true';
+    adminUser.prepend(homeLink);
+  });
+}
+
+addHomeLink();
+
 let inFlightCheck = 0;
 let pendingSignIn = false;
 

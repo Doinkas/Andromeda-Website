@@ -35,7 +35,7 @@ async function getStaffRecordForUser(user) {
     return staffSnap.exists() ? { uid: user.uid, ...staffSnap.data() } : null;
   } catch (error) {
     console.error('Staff access lookup failed:', error);
-    return null;
+    throw new Error('Staff access could not be verified. Check your connection and sign in again.');
   }
 }
 

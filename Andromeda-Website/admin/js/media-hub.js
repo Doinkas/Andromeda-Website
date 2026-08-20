@@ -2,6 +2,7 @@ import {
   DEFAULT_HOME_MEDIA_HUB,
   getHomeMediaHubContent,
   normalizeMediaHubConfig,
+  normalizeSafeLinkHref,
   saveHomeMediaHubContent
 } from '/js/services/media-hub.service.js';
 import { trackEvent } from '/js/services/analytics.service.js';
@@ -148,6 +149,7 @@ function clearDraft() {
 function buildPresetSelect(row) {
   const preset = document.createElement('select');
   preset.className = 'admin-select admin-action-row__preset';
+  preset.setAttribute('aria-label', 'Action link preset');
 
   const blankOption = document.createElement('option');
   blankOption.value = '';
@@ -187,6 +189,7 @@ function createActionRow(action = {}) {
   labelInput.className = 'admin-input';
   labelInput.type = 'text';
   labelInput.placeholder = 'Button text';
+  labelInput.setAttribute('aria-label', 'Action button text');
   labelInput.dataset.actionLabel = '';
   labelInput.value = String(action?.label || '');
 
@@ -194,6 +197,7 @@ function createActionRow(action = {}) {
   hrefInput.className = 'admin-input';
   hrefInput.type = 'text';
   hrefInput.placeholder = 'Link';
+  hrefInput.setAttribute('aria-label', 'Action link URL');
   hrefInput.dataset.actionHref = '';
   hrefInput.value = String(action?.href || '');
 
@@ -349,6 +353,7 @@ function applyStarterCopy() {
 }
 
 function resetUnsavedChanges() {
+  if (!window.confirm('Discard the current Media Hub draft and restore the last loaded version?')) return;
   currentConfig = deepClone(lastLoadedConfig);
   activeSlideIndex = 0;
   clearDraft();
@@ -404,9 +409,33 @@ async function saveMediaHubConfig() {
   }
 
   updateSelectedSlideFromForm();
+
+  for (const [index, slide] of (currentConfig.slides || []).entries()) {
+    const unsafeAction = (slide.actions || []).find((action) => (
+      action?.href && !normalizeSafeLinkHref(action.href)
+    ));
+    if (unsafeAction) {
+      setMessage(`Panel ${index + 1} contains an invalid button link. Use a site path, mailto link, or http(s) URL.`, true);
+      return;
+    }
+
+    const imageUrl = String(slide.media?.url || '').trim();
+    if (imageUrl && !normalizeSafeLinkHref(imageUrl, { allowMailto: false })) {
+      setMessage(`Panel ${index + 1} contains an invalid image URL.`, true);
+      return;
+    }
+
+    const videoUrl = String(slide.media?.videoUrl || '').trim();
+    if (videoUrl && !normalizeSafeLinkHref(videoUrl, { allowRelative: false, allowMailto: false })) {
+      setMessage(`Panel ${index + 1} video links must start with http:// or https://.`, true);
+      return;
+    }
+  }
+
   const config = normalizeMediaHubConfig(currentConfig);
 
   try {
+    if (saveMediaHubButton) saveMediaHubButton.disabled = true;
     trackEvent('media_hub_save_started', {
       slide_count: config.slides.length
     });
@@ -429,6 +458,8 @@ async function saveMediaHubConfig() {
       error: String(error?.message || error)
     });
     setMessage(`Publish failed: ${String(error?.message || error)}`, true);
+  } finally {
+    if (saveMediaHubButton) saveMediaHubButton.disabled = !hasAdminAccess;
   }
 }
 

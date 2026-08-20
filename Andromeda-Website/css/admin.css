@@ -24,6 +24,10 @@ body.admin-body {
   gap: 18px;
 }
 
+.admin-shell[hidden] {
+  display: none;
+}
+
 .admin-topbar {
   display: flex;
   align-items: center;
@@ -351,6 +355,7 @@ body.admin-body {
 
 .admin-table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
 }
 
@@ -766,6 +771,107 @@ body.admin-body {
   .media-hub-field-grid,
   .media-hub-upload-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-shell {
+    padding: 18px 12px 40px;
+    gap: 14px;
+  }
+
+  .admin-topbar,
+  .admin-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .admin-brand {
+    align-items: flex-start;
+  }
+
+  .admin-brand__logo {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+  }
+
+  .admin-brand__title {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .admin-brand__subtitle,
+  .admin-user {
+    font-size: 0.84rem;
+    line-height: 1.35;
+  }
+
+  .admin-grid,
+  .admin-grid--cards {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .admin-link-card {
+    min-height: 0;
+  }
+
+  .admin-link-card__topline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-link-card__access {
+    white-space: normal;
+  }
+
+  .admin-input,
+  .admin-select,
+  .admin-textarea,
+  .admin-table input,
+  .admin-btn,
+  .media-hub-panel-tab {
+    min-height: 44px;
+  }
+
+  .admin-inline-actions,
+  .media-hub-preview__actions {
+    align-items: stretch;
+  }
+
+  .admin-inline-actions .admin-btn,
+  .media-hub-preview__actions .admin-btn {
+    flex: 1 1 140px;
+  }
+
+  .admin-table-wrap {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-modal {
+    padding: 10px;
+    align-items: start;
+  }
+
+  .admin-modal__panel {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .media-hub-editor__section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .admin-link-card:hover,
+  .admin-btn:hover:not(:disabled) {
+    transform: none;
   }
 }
 

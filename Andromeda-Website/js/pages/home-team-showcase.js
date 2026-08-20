@@ -28,7 +28,7 @@ function createTeamCard(team) {
   article.innerHTML = `
     <a class="home-showcase-card__link" href="${escapeHtml(buildTeamHref(team))}" aria-label="View ${escapeHtml(team.name)} team page">
       <span class="home-showcase-card__media">
-        <img src="${escapeHtml(team.logo)}" alt="${escapeHtml(team.name)} logo" onerror="this.onerror=null;this.src='/images/teams/logos/andro-faceit.png';">
+        <img src="${escapeHtml(team.logo)}" alt="${escapeHtml(team.name)} logo" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/images/teams/logos/andro-faceit.png';">
       </span>
       <span class="home-showcase-card__body">
         <span class="home-showcase-card__eyebrow">${escapeHtml(team.region)} / ${escapeHtml(team.tier)}</span>

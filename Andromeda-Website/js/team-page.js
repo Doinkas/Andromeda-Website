@@ -34,6 +34,20 @@ function pickText(value, fallback = '') {
   return next || fallback;
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function getSafeHttpUrl(value) {
+  const url = String(value || '').trim();
+  return /^https?:\/\/[^\s]+$/i.test(url) ? url : '';
+}
+
 function pickList(value, fallback = []) {
   if (Array.isArray(value) && value.length) {
     return value.map((item) => String(item || '').trim()).filter(Boolean);
@@ -68,27 +82,31 @@ function showTeam() {
 
 async function loadTeamMetadata(teamId) {
   const base = TEAM_CONFIG[teamId];
-  if (!base) return null;
+  if (!base) return { metadata: null, roster: null, rosterError: null };
 
   try {
     const rosterDoc = await getRoster(teamId);
     const profile = rosterDoc?.teamProfile || {};
 
     return {
-      ...base,
-      name: pickText(profile.displayName, base.name),
-      tier: pickText(profile.tier, base.tier),
-      region: pickText(profile.region, base.region),
-      rating: pickText(profile.rating, base.rating),
-      description: pickText(profile.description, base.description),
-      manager: pickText(profile.manager, base.manager),
-      coaches: pickText(profile.coaches, base.coaches),
-      captain: pickText(profile.captain, base.captain),
-      highlights: pickList(profile.highlights, base.highlights),
-      achievements: pickList(profile.achievements, base.achievements)
+      metadata: {
+        ...base,
+        name: pickText(profile.displayName, base.name),
+        tier: pickText(profile.tier, base.tier),
+        region: pickText(profile.region, base.region),
+        rating: pickText(profile.rating, base.rating),
+        description: pickText(profile.description, base.description),
+        manager: pickText(profile.manager, base.manager),
+        coaches: pickText(profile.coaches, base.coaches),
+        captain: pickText(profile.captain, base.captain),
+        highlights: pickList(profile.highlights, base.highlights),
+        achievements: pickList(profile.achievements, base.achievements)
+      },
+      roster: rosterDoc,
+      rosterError: null
     };
-  } catch (_error) {
-    return base;
+  } catch (error) {
+    return { metadata: base, roster: null, rosterError: error };
   }
 }
 
@@ -317,7 +335,7 @@ function getMatchEventLabel(match) {
 }
 
 function getMatchStreamUrl(match) {
-  return pickText(match?.streamUrl, pickText(match?.vodUrl, pickText(match?.watchUrl, '')));
+  return getSafeHttpUrl(pickText(match?.streamUrl, pickText(match?.vodUrl, pickText(match?.watchUrl, ''))));
 }
 
 function getMatchScoreLabel(match) {
@@ -609,10 +627,10 @@ function renderCalendarAgenda(byDate) {
     item.className = 'team-calendar__agenda-item';
     const streamUrl = getMatchStreamUrl(match);
     item.innerHTML = `
-      <strong>vs ${match.opponent || match.opponentName || 'TBD'}</strong>
-      <span>${formatMatchDate(match.scheduledAt)}</span>
-      <span>${getMatchEventLabel(match)}</span>
-      ${streamUrl ? `<a href="${streamUrl}" target="_blank" rel="noopener">Watch</a>` : ''}
+      <strong>vs ${escapeHtml(match.opponent || match.opponentName || 'TBD')}</strong>
+      <span>${escapeHtml(formatMatchDate(match.scheduledAt))}</span>
+      <span>${escapeHtml(getMatchEventLabel(match))}</span>
+      ${streamUrl ? `<a href="${escapeHtml(streamUrl)}" target="_blank" rel="noopener">Watch</a>` : ''}
     `;
     listEl.appendChild(item);
   });
@@ -758,14 +776,21 @@ async function loadTeamSchedule(teamId) {
   if (recentListEl) recentListEl.style.display = 'none';
   if (recentEmptyEl) recentEmptyEl.style.display = 'none';
 
-  let upcoming = await listMatchesByTeam(teamId, { limit: 5, upcomingOnly: true });
+  const now = Date.now();
+  const matches = await listMatchesByTeam(teamId, { limit: 50, upcomingOnly: false });
+  let upcoming = matches
+    .filter((match) => {
+      const date = match.scheduledAt?.toDate ? match.scheduledAt.toDate() : new Date(match.scheduledAt);
+      return !Number.isNaN(date.getTime()) && date.getTime() >= now;
+    })
+    .sort((a, b) => getMatchDate(a) - getMatchDate(b))
+    .slice(0, 5);
   if (!upcoming.length) {
     upcoming = await loadUpcomingFromPublicSchedule(teamId, 5);
   }
   renderUpcomingSchedule(upcoming);
 
-  const now = Date.now();
-  const recent = (await listMatchesByTeam(teamId, { limit: 50, upcomingOnly: false }))
+  const recent = matches
     .filter((match) => {
       const date = match.scheduledAt?.toDate ? match.scheduledAt.toDate() : new Date(match.scheduledAt);
       return !Number.isNaN(date.getTime()) && date.getTime() < now;
@@ -799,17 +824,16 @@ async function init() {
   setHeroStatValue('team-stat-recent', '...');
 
   try {
-    const metadata = await loadTeamMetadata(teamId);
+    const { metadata, roster, rosterError } = await loadTeamMetadata(teamId);
     renderTeamHero(teamId, metadata);
     showTeam();
 
-    // Load roster
-    getRoster(teamId)
-      .then(renderRoster)
-      .catch((err) => {
-        console.error('Failed to load roster:', err);
-        document.querySelector('.roster-loading').textContent = 'Error loading roster.';
-      });
+    if (rosterError) {
+      console.error('Failed to load roster:', rosterError);
+      document.querySelector('.roster-loading').textContent = 'Error loading roster.';
+    } else {
+      renderRoster(roster);
+    }
 
     // Load schedule and recent official matches into separate sections
     loadTeamSchedule(teamId)

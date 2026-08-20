@@ -76,9 +76,18 @@ export const DEFAULT_HOME_MEDIA_HUB = {
   ]
 };
 
+export function normalizeSafeLinkHref(value, { allowRelative = true, allowMailto = true } = {}) {
+  const href = String(value || '').trim();
+  if (!href || /[\u0000-\u001f\u007f\s]/.test(href)) return '';
+  if (/^https?:\/\//i.test(href)) return href;
+  if (allowMailto && /^mailto:[^@\s]+@[^@\s]+$/i.test(href)) return href;
+  if (!allowRelative || href.startsWith('//') || /^[a-z][a-z0-9+.-]*:/i.test(href)) return '';
+  return href;
+}
+
 function normalizeAction(action) {
   const label = String(action?.label || '').trim();
-  const href = String(action?.href || '').trim();
+  const href = normalizeSafeLinkHref(action?.href);
   if (!label || !href) return null;
 
   return {
@@ -90,9 +99,15 @@ function normalizeAction(action) {
 
 function normalizeMedia(media, fallback, iconFallback = '') {
   const hasMedia = media && typeof media === 'object';
-  const url = String(hasMedia ? media.url || '' : fallback?.url || iconFallback || '').trim();
+  const url = normalizeSafeLinkHref(
+    hasMedia ? media.url || '' : fallback?.url || iconFallback || '',
+    { allowMailto: false }
+  );
   const alt = String(hasMedia ? media.alt || '' : fallback?.alt || '').trim();
-  const videoUrl = String(hasMedia ? media.videoUrl || '' : fallback?.videoUrl || '').trim();
+  const videoUrl = normalizeSafeLinkHref(
+    hasMedia ? media.videoUrl || '' : fallback?.videoUrl || '',
+    { allowRelative: false, allowMailto: false }
+  );
 
   return {
     type: 'image',
@@ -103,7 +118,10 @@ function normalizeMedia(media, fallback, iconFallback = '') {
 }
 
 function normalizeSlide(slide, fallback) {
-  const icon = String(slide?.icon || fallback?.icon || '').trim();
+  const rawIcon = String(slide?.icon || fallback?.icon || '').trim();
+  const icon = /^[a-z][a-z0-9+.-]*:/i.test(rawIcon)
+    ? normalizeSafeLinkHref(rawIcon, { allowMailto: false })
+    : rawIcon;
   const next = {
     tabLabel: String(slide?.tabLabel || fallback?.tabLabel || '').trim(),
     badge: String(slide?.badge || fallback?.badge || '').trim(),

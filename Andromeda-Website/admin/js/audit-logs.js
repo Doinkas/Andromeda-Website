@@ -117,6 +117,13 @@ function renderRows(logs) {
 
     const actorCell = document.createElement('td');
     actorCell.textContent = String(entry.performedBy || '—');
+    if (entry.actorUid) {
+      const uid = document.createElement('small');
+      uid.className = 'admin-text-muted';
+      uid.style.display = 'block';
+      uid.textContent = `UID: ${String(entry.actorUid)}`;
+      actorCell.appendChild(uid);
+    }
 
     const summaryCell = document.createElement('td');
     summaryCell.textContent = summarizeLog(entry);

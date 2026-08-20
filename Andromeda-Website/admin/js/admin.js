@@ -797,6 +797,7 @@ async function handleVerifyRoster() {
   }
 
   try {
+    if (verifyRosterButton) verifyRosterButton.disabled = true;
     setMessage(rosterMessage, 'Verifying current roster...');
     await verifyRoster(selectedTeam, currentUserEmail || null);
     await loadRoster();
@@ -804,6 +805,8 @@ async function handleVerifyRoster() {
   } catch (error) {
     console.error('Verify roster failed:', error);
     setMessage(rosterMessage, error?.message || 'Failed to verify roster.', true);
+  } finally {
+    if (verifyRosterButton) verifyRosterButton.disabled = !hasAdminAccess;
   }
 }
 
@@ -906,6 +909,12 @@ function renderTrials(trials) {
     conversionStatus.innerHTML = '<option value="">Unset Status</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="trial">Trial</option>';
     conversionStatus.style.minWidth = '140px';
 
+    const setTrialActionButtonsDisabled = (disabled) => {
+      approveButton.disabled = disabled || !hasAdminAccess;
+      rejectButton.disabled = disabled || !hasAdminAccess;
+      dropButton.disabled = disabled || !hasAdminAccess;
+    };
+
     approveButton.addEventListener('click', async () => {
       if (!requireAdminWriteAccess(trialsMessage)) return;
       try {
@@ -914,6 +923,9 @@ function renderTrials(trials) {
           setMessage(trialsMessage, 'Select a team before approving a trial.', true);
           return;
         }
+
+        if (!window.confirm(`Approve ${trial.name || 'this trial'} and add them to the ${nextTeam.toUpperCase()} roster?`)) return;
+        setTrialActionButtonsDisabled(true);
 
         await approveTrialToRoster({
           trialId: trial.id,
@@ -932,6 +944,8 @@ function renderTrials(trials) {
       } catch (error) {
         console.error('Approve trial failed:', error);
         setMessage(trialsMessage, error?.message || 'Approve failed. Please try again.', true);
+      } finally {
+        setTrialActionButtonsDisabled(false);
       }
     });
 
@@ -942,12 +956,17 @@ function renderTrials(trials) {
     rejectButton.disabled = !hasAdminAccess;
     rejectButton.addEventListener('click', async () => {
       if (!requireAdminWriteAccess(trialsMessage)) return;
+      if (!window.confirm(`Reject ${trial.name || 'this trial'}?`)) return;
       try {
+        setTrialActionButtonsDisabled(true);
         await setTrialStatus(trial.id, 'rejected', currentUserEmail);
         await loadTrials();
+        setMessage(trialsMessage, 'Trial rejected.');
       } catch (error) {
         console.error('Reject trial failed:', error);
         setMessage(trialsMessage, 'Reject failed. Please try again.', true);
+      } finally {
+        setTrialActionButtonsDisabled(false);
       }
     });
 
@@ -958,12 +977,17 @@ function renderTrials(trials) {
     dropButton.disabled = !hasAdminAccess;
     dropButton.addEventListener('click', async () => {
       if (!requireAdminWriteAccess(trialsMessage)) return;
+      if (!window.confirm(`Drop ${trial.name || 'this trial'} from the active trial queue?`)) return;
       try {
+        setTrialActionButtonsDisabled(true);
         await setTrialStatus(trial.id, 'dropped', currentUserEmail);
         await loadTrials();
+        setMessage(trialsMessage, 'Trial dropped.');
       } catch (error) {
         console.error('Drop trial failed:', error);
         setMessage(trialsMessage, 'Drop failed. Please try again.', true);
+      } finally {
+        setTrialActionButtonsDisabled(false);
       }
     });
 
@@ -1020,6 +1044,7 @@ async function handleAddTrial() {
   }
 
   try {
+    if (addTrialButton) addTrialButton.disabled = true;
     trackEvent('trial_submission_started', {
       team_id: teamId,
       has_notes: notes.length > 0
@@ -1042,6 +1067,8 @@ async function handleAddTrial() {
       error: String(error?.message || error)
     });
     setMessage(trialsMessage, 'Add trial failed. Please try again.', true);
+  } finally {
+    if (addTrialButton) addTrialButton.disabled = !hasAdminAccess;
   }
 }
 

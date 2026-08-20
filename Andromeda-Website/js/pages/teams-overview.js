@@ -29,17 +29,9 @@ if (!root) {
     if (!grid) return;
 
     grid.innerHTML = '';
-    const cards = [];
     items.forEach((team) => {
       const card = createTeamCard(team);
-      cards.push(card);
       grid.appendChild(card);
-    });
-
-    window.requestAnimationFrame(() => {
-      cards.forEach((card) => {
-        void hydrateCard(card.dataset.teamId, card);
-      });
     });
   }
 
@@ -54,7 +46,7 @@ if (!root) {
         <span class="team-directory-card__surface">
           <span class="team-directory-card__glow" aria-hidden="true"></span>
           <span class="team-directory-card__logo-wrap">
-            <img class="team-directory-card__logo" src="${escapeHtml(team.logo)}" alt="${escapeHtml(team.name)} logo" onerror="this.onerror=null;this.src='/images/teams/logos/andro-faceit.png';">
+            <img class="team-directory-card__logo" src="${escapeHtml(team.logo)}" alt="${escapeHtml(team.name)} logo" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/images/teams/logos/andro-faceit.png';">
           </span>
           <span class="team-directory-card__name">${escapeHtml(team.name)}</span>
           <span class="team-directory-card__badge">${escapeHtml(team.tier || team.division || 'Team')}</span>
@@ -66,6 +58,7 @@ if (!root) {
     `;
 
     const prepareCard = () => {
+      if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
       placePopout(article);
       if (article.dataset.hydrated === 'true') return;
       void hydrateCard(team.id, article);

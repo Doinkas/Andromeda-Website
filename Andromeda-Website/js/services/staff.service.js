@@ -89,6 +89,7 @@ function addAuditEntry(batch, {
   action,
   targetCollection,
   targetId,
+  actorUid,
   performedBy,
   before = null,
   after = null,
@@ -98,6 +99,7 @@ function addAuditEntry(batch, {
     action,
     targetCollection,
     targetId,
+    actorUid,
     performedBy: performedBy || null,
     performedAt: serverTimestamp(),
     before,
@@ -177,6 +179,7 @@ export async function createStaffInvite(input = {}) {
     action: 'staff_invite_created',
     targetCollection: 'staffInvites',
     targetId: inviteRef.id,
+    actorUid: authz.uid,
     performedBy: authz.email,
     after: invite
   });
@@ -215,6 +218,7 @@ export async function revokeStaffInvite(inviteId) {
     action: 'staff_invite_revoked',
     targetCollection: 'staffInvites',
     targetId: normalizedInviteId,
+    actorUid: authz.uid,
     performedBy: authz.email,
     before: invite,
     after: { ...invite, status: 'revoked' }
@@ -273,6 +277,7 @@ export async function saveStaffAccess(input = {}) {
     action: auditAction,
     targetCollection: 'staffAccess',
     targetId: staff.uid,
+    actorUid: authz.uid,
     performedBy: authz.email,
     before,
     after: staff

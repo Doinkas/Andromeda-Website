@@ -104,25 +104,31 @@ service firebase.storage {
         );
     }
 
-    function isImageUpload() {
+    function isMatchImageUpload() {
       return request.resource != null
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(png|jpeg|jpg|webp)');
+    }
+
+    function isMediaHubImageUpload() {
+      return request.resource != null
+        && request.resource.size <= 2 * 1024 * 1024
+        && request.resource.contentType.matches('image/(png|jpeg|webp)');
     }
 
     match /media-hub/{path=**} {
       allow read: if true;
-      allow write: if hasAnyRole(['owner', 'admin', 'media']) && isImageUpload();
+      allow write: if hasAnyRole(['owner', 'admin', 'media']) && isMediaHubImageUpload();
     }
 
     match /officials/{teamId}/{matchId}/{fileName} {
       allow read: if true;
-      allow write: if canManageTeam(teamId) && isImageUpload();
+      allow write: if canManageTeam(teamId) && isMatchImageUpload();
     }
 
     match /scrims/{teamId}/{matchId}/{fileName} {
       allow read: if canManageTeam(teamId);
-      allow write: if canManageTeam(teamId) && isImageUpload();
+      allow write: if canManageTeam(teamId) && isMatchImageUpload();
     }
 
     match /{path=**} {

@@ -47,6 +47,7 @@ const importFormatSelect = document.getElementById('import-format');
 const scheduleInput = document.getElementById('schedule-input');
 const importEventName = document.getElementById('import-event-name');
 const timezoneOffset = document.getElementById('timezone-offset');
+const importSubmitButton = importForm?.querySelector('button[type="submit"]');
 
 const matchModal = document.getElementById('match-modal');
 const modalClose = document.getElementById('modal-close');
@@ -109,6 +110,15 @@ function setStatus(el, message, type = 'info') {
   el.textContent = message;
   el.hidden = false;
   el.className = `${baseClass} ${type === 'error' ? 'error' : type === 'success' ? 'success' : ''}`.trim();
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 function getMonthLabel(date) {
@@ -403,6 +413,7 @@ async function handleImportSubmit(event) {
       return;
     }
 
+    if (importSubmitButton) importSubmitButton.disabled = true;
     setStatus(importStatus, `Importing ${matches.length} matches...`, 'info');
     const unauthorizedTeam = matches.find((match) => !match.teamId);
     if (unauthorizedTeam) {
@@ -418,6 +429,8 @@ async function handleImportSubmit(event) {
   } catch (error) {
     console.error('Import error:', error);
     setStatus(importStatus, `Error: ${error.message}`, 'error');
+  } finally {
+    if (importSubmitButton) importSubmitButton.disabled = false;
   }
 }
 
@@ -428,9 +441,11 @@ async function handleImportSubmit(event) {
 async function loadMatches() {
   try {
     allMatches = await listAdminMatches({ limit: 200, upcomingOnly: false });
+    return null;
   } catch (error) {
     console.error('Failed to load matches:', error);
     allMatches = [];
+    return error;
   }
 }
 
@@ -439,9 +454,11 @@ async function loadEvents() {
     const eventsQuery = query(collection(db, 'events'), orderBy('scheduledAt', 'asc'), fbLimit(300));
     const snapshot = await getDocs(eventsQuery);
     allEvents = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+    return null;
   } catch (error) {
     console.error('Failed to load events:', error);
     allEvents = [];
+    return error;
   }
 }
 
@@ -571,8 +588,8 @@ function renderSelectedDayDetail() {
     const eventName = String(match.eventName || match.tournamentName || '').trim();
     const result = normalizeMatchResult(match.result);
     info.innerHTML = `
-      <strong>${teamName} vs ${match.opponent || 'TBD'}</strong>
-      <span>${formatDateTime(match.scheduledAt)}${eventName ? ` | ${eventName}` : ''}${result ? ` | Result: ${result}` : ''}</span>
+      <strong>${escapeHtml(teamName)} vs ${escapeHtml(match.opponent || 'TBD')}</strong>
+      <span>${escapeHtml(formatDateTime(match.scheduledAt))}${eventName ? ` | ${escapeHtml(eventName)}` : ''}${result ? ` | Result: ${escapeHtml(result)}` : ''}</span>
     `;
 
     const edit = document.createElement('button');
@@ -592,8 +609,8 @@ function renderSelectedDayDetail() {
 
     const info = document.createElement('div');
     info.innerHTML = `
-      <strong>${event.name || 'Untitled event'}</strong>
-      <span>${formatDateTime(event.scheduledAt)}${event.link ? ` | ${event.link}` : ''}</span>
+      <strong>${escapeHtml(event.name || 'Untitled event')}</strong>
+      <span>${escapeHtml(formatDateTime(event.scheduledAt))}${event.link ? ` | ${escapeHtml(event.link)}` : ''}</span>
     `;
 
     const edit = document.createElement('button');
@@ -620,6 +637,9 @@ function renderCalendarDay(date, isCurrentMonth) {
     return dayEl;
   }
 
+  dayEl.tabIndex = 0;
+  dayEl.setAttribute('role', 'button');
+
   const headerEl = document.createElement('div');
   headerEl.className = 'calendar-day-header';
   headerEl.textContent = date.getDate();
@@ -627,11 +647,17 @@ function renderCalendarDay(date, isCurrentMonth) {
 
   const matches = getMatchesForDay(date);
   const events = getEventsForDay(date);
+  dayEl.setAttribute(
+    'aria-label',
+    `${formatDateLabel(date)}. ${matches.length} match${matches.length === 1 ? '' : 'es'}, ${events.length} event${events.length === 1 ? '' : 's'}.`
+  );
 
   // Render matches
   matches.forEach(match => {
-    const eventEl = document.createElement('div');
+    const eventEl = document.createElement('button');
+    eventEl.type = 'button';
     eventEl.className = `calendar-day-event ${match.result ? match.result : 'pending'}`;
+    eventEl.setAttribute('aria-label', `Edit ${formatMatchDisplay(match)}`);
     
     const indicator = document.createElement('span');
     indicator.className = 'match-result-indicator';
@@ -652,7 +678,8 @@ function renderCalendarDay(date, isCurrentMonth) {
 
   // Render events
   events.forEach(event => {
-    const eventEl = document.createElement('div');
+    const eventEl = document.createElement(canManageEvents ? 'button' : 'div');
+    if (canManageEvents) eventEl.type = 'button';
     eventEl.className = 'calendar-day-event event';
     
     const text = document.createElement('span');
@@ -698,6 +725,12 @@ function renderCalendarDay(date, isCurrentMonth) {
 
   dayEl.addEventListener('click', (e) => {
     e.stopPropagation();
+    selectedDateKey = selectedDateKey === dateKey ? null : dateKey;
+    renderCalendar();
+  });
+  dayEl.addEventListener('keydown', (e) => {
+    if (e.target !== dayEl || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault();
     selectedDateKey = selectedDateKey === dateKey ? null : dateKey;
     renderCalendar();
   });
@@ -747,9 +780,13 @@ function renderCalendar() {
 }
 
 async function loadCalendar() {
-  await loadMatches();
-  await loadEvents();
+  setStatus(calendarStatus, 'Loading calendar...', 'info');
+  const [matchError, eventError] = await Promise.all([loadMatches(), loadEvents()]);
   renderCalendar();
+  if (matchError || eventError) {
+    const failedSources = [matchError ? 'matches' : '', eventError ? 'events' : ''].filter(Boolean).join(' and ');
+    setStatus(calendarStatus, `Could not load ${failedSources}. Try refreshing or signing in again.`, 'error');
+  }
 }
 
 // ============================================================================

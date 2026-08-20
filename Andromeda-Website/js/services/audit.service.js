@@ -1,4 +1,4 @@
-import { db } from '/js/core/firebase.js';
+import { auth, db } from '/js/core/firebase.js';
 import {
   collection,
   doc,
@@ -30,6 +30,7 @@ export function buildAuditPayload({
     action,
     targetCollection,
     targetId,
+    actorUid: auth.currentUser?.uid || null,
     performedBy: performedBy || null,
     performedAt: serverTimestamp(),
     before,
@@ -50,6 +51,7 @@ export async function logAudit({ action, entityType, entityId, meta = null, perf
     action: action || 'unknown',
     targetCollection: entityType || null,
     targetId: entityId || null,
+    actorUid: auth.currentUser?.uid || null,
     performedBy: performedBy || null,
     performedAt: serverTimestamp(),
     before: null,

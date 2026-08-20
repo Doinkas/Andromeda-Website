@@ -64,6 +64,11 @@ function buildBulletItems(items = [], maxItems = 2) {
   return normalized.slice(0, maxItems);
 }
 
+function getSafeExternalUrl(value) {
+  const url = String(value || '').trim();
+  return /^https?:\/\/[^\s]+$/i.test(url) ? url : '';
+}
+
 export function createTournamentCard(tournament, { maxBullets = 2 } = {}) {
   const card = document.createElement('article');
   card.className = 'card tournament-card';
@@ -79,7 +84,7 @@ export function createTournamentCard(tournament, { maxBullets = 2 } = {}) {
   ].slice(0, maxBullets);
 
   const placement = String(tournament?.placementText || '').trim();
-  const link = String(tournament?.link || '').trim();
+  const link = getSafeExternalUrl(tournament?.link);
 
   card.innerHTML = `
     <header class="tournament-card__header">

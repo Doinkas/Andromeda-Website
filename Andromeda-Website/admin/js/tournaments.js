@@ -23,6 +23,7 @@ const highlightsInput = document.getElementById('tournament-highlights');
 const linkInput = document.getElementById('tournament-link');
 const isPublishedInput = document.getElementById('tournament-published');
 const resetButton = document.getElementById('tournament-reset-btn');
+const submitButton = form?.querySelector('button[type="submit"]');
 
 const listEl = document.getElementById('admin-tournaments-list');
 
@@ -74,6 +75,10 @@ function validateFormData(data) {
 
   if (!Number.isFinite(data.record.losses) || data.record.losses < 0) {
     return 'Losses must be a number greater than or equal to 0.';
+  }
+
+  if (data.link && !/^https?:\/\/[^\s]+$/i.test(data.link)) {
+    return 'External links must start with http:// or https://.';
   }
 
   return null;
@@ -151,6 +156,7 @@ function buildAdminCard(tournament) {
   toggleBtn.textContent = tournament.isPublished ? 'Unpublish' : 'Publish';
   toggleBtn.addEventListener('click', async () => {
     try {
+      toggleBtn.disabled = true;
       setStatus('Updating publish status...');
       await updateTournament(tournament.id, {
         ...tournament,
@@ -162,6 +168,8 @@ function buildAdminCard(tournament) {
     } catch (error) {
       console.error('Failed to toggle tournament:', error);
       setStatus(error?.message || 'Failed to update publish status.', true);
+    } finally {
+      toggleBtn.disabled = false;
     }
   });
 
@@ -174,6 +182,7 @@ function buildAdminCard(tournament) {
     if (!confirmed) return;
 
     try {
+      deleteBtn.disabled = true;
       setStatus('Deleting tournament...');
       await deleteTournament(tournament.id);
       await loadTournaments();
@@ -184,6 +193,8 @@ function buildAdminCard(tournament) {
     } catch (error) {
       console.error('Failed to delete tournament:', error);
       setStatus(error?.message || 'Failed to delete tournament.', true);
+    } finally {
+      deleteBtn.disabled = false;
     }
   });
 
@@ -218,6 +229,7 @@ async function handleSubmit(event) {
   }
 
   try {
+    if (submitButton) submitButton.disabled = true;
     if (idInput.value && editingTournament) {
       setStatus('Updating tournament...');
       await updateTournament(idInput.value, {
@@ -237,6 +249,8 @@ async function handleSubmit(event) {
   } catch (error) {
     console.error('Tournament save failed:', error);
     setStatus(error?.message || 'Failed to save tournament.', true);
+  } finally {
+    if (submitButton) submitButton.disabled = false;
   }
 }
 
@@ -246,6 +260,13 @@ resetButton.addEventListener('click', clearForm);
 window.addEventListener('admin:authorized', async (event) => {
   const { email } = event.detail ?? {};
   if (emailEl) emailEl.textContent = email || '—';
-  await loadTournaments();
-  setStatus('Ready.');
+  try {
+    setStatus('Loading competition records...');
+    await loadTournaments();
+    setStatus('Ready.');
+  } catch (error) {
+    console.error('Tournament load failed:', error);
+    listEl.innerHTML = '<p class="admin-empty">Competition records could not be loaded.</p>';
+    setStatus(error?.message || 'Failed to load competition records.', true);
+  }
 });
