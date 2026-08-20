@@ -1,0 +1,20 @@
+{
+  "name": "andromeda-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "npm run check:js && npm run test:authz && npm run test:dashboard-nav && npm run test:identity && npm run test:match-events && npm run test:trials && npm run test:trials-workflow && npm run test:team-workspace && npm run test:roster-review && npm run test:rules-policy && npm run check:routes && npm run check:refs",
+    "check:js": "node tools/check-js.mjs",
+    "test:authz": "node --test tools/authz.test.mjs",
+    "test:dashboard-nav": "node --test tools/staff-dashboard-nav.test.mjs",
+    "test:identity": "node --test tools/staff-identity.test.mjs",
+    "test:match-events": "node --test tools/match-event-authorization.test.mjs",
+    "test:trials": "node --test tools/trials-query.test.mjs",
+    "test:trials-workflow": "node --test tools/trials-workflow-view.test.mjs",
+    "test:team-workspace": "node --test tools/team-workspace-branding.test.mjs",
+    "test:roster-review": "node --test tools/roster-review-workflow.test.mjs",
+    "test:rules-policy": "node --test tools/firestore-rules-policy.test.mjs",
+    "check:routes": "node tools/check-routes.mjs",
+    "check:refs": "node tools/check-local-refs.mjs"
+  }
+}

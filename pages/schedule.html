@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Follow the Andromeda Esports match calendar with upcoming official match days and stream coverage windows.">
+  <meta name="theme-color" content="#05070B">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Schedule — Andromeda Esports">
+  <meta property="og:description" content="Track Andromeda match calendar updates and official match-day schedules.">
+  <meta property="og:image" content="/images/branding/andro-org.png">
+  <script>window.__andromedaMotionFallback=window.setTimeout(function(){document.documentElement.classList.remove('js-motion');},2500);document.documentElement.classList.add('js-motion');</script>
+  <title>Schedule — Andromeda Esports</title>
+  <link rel="icon" href="/images/branding/andro-org.png" type="image/png">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header>
+    <nav class="site-nav" data-site-nav>
+      <a class="brand-mark" href="../index.html" aria-label="Andromeda Esports home">
+        <img class="brand-mark__logo" src="../images/branding/andro-org.png" alt="Andromeda Esports logo" onerror="this.style.display='none'">
+        <span class="brand-mark__text">Andromeda Esports</span>
+      </a>
+      <button class="site-nav__toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="site-nav-menu" data-site-nav-toggle>
+        <span class="site-nav__toggle-bar" aria-hidden="true"></span>
+        <span class="site-nav__toggle-bar" aria-hidden="true"></span>
+        <span class="site-nav__toggle-bar" aria-hidden="true"></span>
+      </button>
+      <div class="site-nav__links" id="site-nav-menu" data-site-nav-menu>
+        <a href="teams.html">Teams</a>
+        <a href="schedule.html">Schedule</a>
+        <a href="tournaments.html">Competition</a>
+        <a class="nav-merch" href="merch.html">Merch</a>
+        <a href="contact.html">About</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-main">
+    <section class="page-header page-header-animate section-shell section-band section-band--hero">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="section-kicker">Calendar</p>
+          <h1 class="page-header-item">Andromeda Schedule</h1>
+          <p class="lead page-header-item">A month-by-month calendar for official Andromeda match days and stream coverage.</p>
+        </div>
+        <div class="section-divider" aria-hidden="true"></div>
+        <div class="section-body">
+          <div class="schedule-hero-layout">
+            <div class="league-badge page-header-item">
+              <img src="../images/branding/andro-org.png" alt="Nebula Series" onerror="this.style.display='none'">
+              <div>
+                <strong>Nebula Series</strong>
+                <div class="small">Official league slate for the current season</div>
+              </div>
+            </div>
+            <p class="schedule-hero-note page-header-item">Team-specific match history now lives on each roster page. Use the calendar here for the full org-wide view.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-shell section-band section-band--base schedule-calendar-shell" aria-labelledby="schedule-calendar-heading">
+      <div class="section-inner">
+      <div class="section-head">
+        <p class="section-kicker">Season View</p>
+        <h2 id="schedule-calendar-heading">Official Match Calendar</h2>
+        <p class="lead">Browse each month, filter by roster, and open any date to see the full match card.</p>
+      </div>
+      <div class="section-divider" aria-hidden="true"></div>
+      <div class="section-body">
+        <div class="schedule-summary" aria-label="Season schedule highlights">
+          <article class="schedule-summary-card card">
+            <p class="muted">Official Match Days</p>
+            <strong id="schedule-total-events">0</strong>
+          </article>
+          <article class="schedule-summary-card card">
+            <p class="muted">Active Rosters</p>
+            <strong id="schedule-total-teams">0</strong>
+          </article>
+          <article class="schedule-summary-card card">
+            <p class="muted">Broadcasted Matches</p>
+            <strong id="schedule-total-streams">0</strong>
+          </article>
+        </div>
+
+        <div class="schedule-calendar-toolbar">
+          <div class="schedule-calendar-nav" aria-label="Calendar month controls">
+            <button id="schedule-prev-month" class="btn btn--secondary" type="button">Prev</button>
+            <div id="schedule-current-month" class="schedule-calendar-current" aria-live="polite">Loading...</div>
+            <button id="schedule-next-month" class="btn btn--secondary" type="button">Next</button>
+          </div>
+
+          <label class="schedule-calendar-filter">
+            <span>Filter roster</span>
+            <select id="schedule-team-filter" class="scrims-filter">
+              <option value="">All rosters</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="schedule-calendar-grid-layout">
+          <section class="schedule-calendar card" aria-label="Monthly match calendar">
+            <div class="schedule-calendar-weekdays" aria-hidden="true">
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+            <div id="schedule-calendar-grid" class="schedule-calendar-days"></div>
+          </section>
+
+          <aside class="schedule-day-panel card" aria-live="polite">
+            <p class="muted">Selected day</p>
+            <h3 id="schedule-selected-label">Pick a date</h3>
+            <p id="schedule-selected-empty" class="muted">Select a highlighted date to see the full match card.</p>
+            <div id="schedule-selected-events" class="schedule-day-events"></div>
+          </aside>
+        </div>
+
+        <section class="schedule-agenda" aria-labelledby="schedule-agenda-heading">
+          <div class="schedule-agenda__head">
+            <h3 id="schedule-agenda-heading">Month Agenda</h3>
+            <p class="muted">Every official match in the current calendar view.</p>
+          </div>
+          <div id="schedule-agenda-list" class="schedule-agenda-list"></div>
+        </section>
+      </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-inner container">
+      <div class="footer-nav">
+        <a href="../index.html">Home</a>
+        <a href="teams.html">Teams</a>
+        <a href="schedule.html">Schedule</a>
+        <a href="tournaments.html">Competition</a>
+        <a href="contact.html">About</a>
+      </div>
+      <div class="footer-social">
+        <a class="social btn" href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener">Join Discord</a>
+        <a class="social" href="https://twitch.tv/andromeda_esports_" target="_blank" rel="noopener">Twitch</a>
+        <a class="social" href="https://youtube.com/@andromedaesports-n5z1w" target="_blank" rel="noopener">YouTube</a>
+        <a class="social" href="https://www.tiktok.com/@andromeda.esports7" target="_blank" rel="noopener">TikTok</a>
+      </div>
+    </div>
+    <div class="footer-bottom container">
+      <small>© Andromeda Esports</small>
+    </div>
+  </footer>
+
+  <script type="module" src="/js/pages/site-analytics.js"></script>
+  <script src="/js/animations.js" defer></script>
+  <script src="/js/ambient-background.js" defer></script>
+  <script id="schedule-data" type="application/json">
+    {
+      "league": {
+        "name": "Nebula Series",
+        "timezone": "America/New_York"
+      },
+      "events": [
+        {"id":"horizon-2026-02-20","date":"2026-02-20T20:00:00-05:00","teamId":"horizon","teamLabel":"Andromeda: Horizon","opponent":"Timber Trolls","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"proxima-2026-02-21","date":"2026-02-21T20:00:00-05:00","teamId":"proxima","teamLabel":"Andromeda: Proxima","opponent":"Bubbles","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"horizon-2026-02-27","date":"2026-02-27T20:00:00-05:00","teamId":"horizon","teamLabel":"Andromeda: Horizon","opponent":"Vitality: Surge","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"proxima-2026-02-28","date":"2026-02-28T20:00:00-05:00","teamId":"proxima","teamLabel":"Andromeda: Proxima","opponent":"One Trick Pony's","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"horizon-2026-03-06","date":"2026-03-06T20:00:00-05:00","teamId":"horizon","teamLabel":"Andromeda: Horizon","opponent":"Children of Helios","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"horizon-2026-03-13","date":"2026-03-13T20:00:00-04:00","teamId":"horizon","teamLabel":"Andromeda: Horizon","opponent":"Goldfish","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"proxima-2026-03-14","date":"2026-03-14T20:00:00-04:00","teamId":"proxima","teamLabel":"Andromeda: Proxima","opponent":"The Cardinalings","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"comet-2026-03-19","date":"2026-03-19T20:00:00-04:00","teamId":"comet","teamLabel":"Andromeda: Comet","opponent":"Hellriders","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"horizon-2026-03-20","date":"2026-03-20T20:00:00-04:00","teamId":"horizon","teamLabel":"Andromeda: Horizon","opponent":"Eclipse Nexus","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"proxima-2026-03-21","date":"2026-03-21T20:00:00-04:00","teamId":"proxima","teamLabel":"Andromeda: Proxima","opponent":"Solar Extinction","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"comet-2026-03-26","date":"2026-03-26T20:00:00-04:00","teamId":"comet","teamLabel":"Andromeda: Comet","opponent":"RM: Bishops Greed","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"horizon-2026-03-27","date":"2026-03-27T20:00:00-04:00","teamId":"horizon","teamLabel":"Andromeda: Horizon","opponent":"Lunar Eclipse","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"proxima-2026-03-28","date":"2026-03-28T20:00:00-04:00","teamId":"proxima","teamLabel":"Andromeda: Proxima","opponent":"Mantas","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"comet-2026-04-02","date":"2026-04-02T20:00:00-04:00","teamId":"comet","teamLabel":"Andromeda: Comet","opponent":"The Hurricane","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"horizon-2026-04-03","date":"2026-04-03T20:00:00-04:00","teamId":"horizon","teamLabel":"Andromeda: Horizon","opponent":"Dead on Revival","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"},
+        {"id":"proxima-2026-04-04","date":"2026-04-04T20:00:00-04:00","teamId":"proxima","teamLabel":"Andromeda: Proxima","opponent":"Vitality: Electric Rose","streamUrl":"https://www.twitch.tv/nebula_series","type":"official"}
+      ]
+    }
+  </script>
+  <script type="module" src="/js/site-navigation.js"></script>
+  <script type="module" src="/js/pages/staff-dashboard-nav.js"></script>
+  <script type="module" src="/js/pages/schedule-calendar.js"></script>
+
+</body>
+</html>

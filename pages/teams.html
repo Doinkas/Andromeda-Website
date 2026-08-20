@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Explore Andromeda Esports teams across divisions and view active rosters competing under the organization.">
+  <meta name="theme-color" content="#05070B">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Andromeda Teams">
+  <meta property="og:description" content="Browse Andromeda divisions and active competitive rosters.">
+  <meta property="og:image" content="/images/branding/andro-org.png">
+  <script>window.__andromedaMotionFallback=window.setTimeout(function(){document.documentElement.classList.remove('js-motion');},2500);document.documentElement.classList.add('js-motion');</script>
+  <title>Andromeda Teams</title>
+  <link rel="icon" href="/images/branding/andro-org.png" type="image/png">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header>
+    <nav class="site-nav" data-site-nav>
+      <a class="brand-mark" href="../index.html" aria-label="Andromeda Esports home">
+        <img class="brand-mark__logo" src="../images/branding/andro-org.png" alt="Andromeda Esports logo" onerror="this.style.display='none'">
+        <span class="brand-mark__text">Andromeda Esports</span>
+      </a>
+      <button class="site-nav__toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="site-nav-menu" data-site-nav-toggle>
+        <span class="site-nav__toggle-bar" aria-hidden="true"></span>
+        <span class="site-nav__toggle-bar" aria-hidden="true"></span>
+        <span class="site-nav__toggle-bar" aria-hidden="true"></span>
+      </button>
+      <div class="site-nav__links" id="site-nav-menu" data-site-nav-menu>
+        <a href="teams.html">Teams</a>
+        <a href="schedule.html">Schedule</a>
+        <a href="tournaments.html">Competition</a>
+        <a class="nav-merch" href="merch.html">Merch</a>
+        <a href="contact.html">About</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="teams-hero section page-header page-header-animate section-band section-band--hero" aria-label="Teams hero">
+      <div class="teams-hero__inner container">
+        <img class="teams-hero__brand page-header-item" src="/images/branding/andro-org.png" alt="Andromeda Esports brand logo">
+        <h1 class="teams-hero__title page-header-item">Teams</h1>
+        <p class="teams-hero__sub page-header-item">Explore every active Andromeda roster across Main and FACEIT competition.</p>
+      </div>
+    </section>
+
+    <section class="teams-directory container section section-shell section-band section-band--base" data-module="teams-directory" aria-labelledby="teams-directory-heading">
+      <div class="section-inner">
+        <div class="section-head teams-directory__head">
+          <div>
+            <p class="section-kicker">Team Directory</p>
+            <h2 id="teams-directory-heading">Active Rosters</h2>
+            <p class="lead">Open a team profile for players, matches, staff, and roster context.</p>
+          </div>
+          <p class="teams-directory__count" id="teams-directory-count">Loading teams...</p>
+        </div>
+
+        <div class="teams-directory__filters" role="group" aria-label="Filter teams by division">
+          <button class="teams-directory__filter is-active" type="button" data-team-filter="all" aria-pressed="true">All</button>
+          <button class="teams-directory__filter" type="button" data-team-filter="main" aria-pressed="false">Main</button>
+          <button class="teams-directory__filter" type="button" data-team-filter="faceit" aria-pressed="false">FACEIT</button>
+        </div>
+
+        <div class="section-divider" aria-hidden="true"></div>
+        <div class="section-body">
+          <div class="teams-directory__grid" id="teams-directory-grid" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner container">
+      <div class="footer-nav">
+        <a href="../index.html">Home</a>
+        <a href="teams.html">Teams</a>
+        <a href="schedule.html">Schedule</a>
+        <a href="tournaments.html">Competition</a>
+        <a href="contact.html">About</a>
+      </div>
+      <div class="footer-social">
+        <a class="social btn social--discord" href="https://discord.gg/yHfEKtBAbc" target="_blank" rel="noopener noreferrer" aria-label="Join Discord">
+          <span>Join Discord</span>
+        </a>
+        <a class="social social--twitch" href="https://twitch.tv/andromeda_esports_" target="_blank" rel="noopener noreferrer" aria-label="Andromeda on Twitch">
+          <span>Twitch</span>
+        </a>
+        <a class="social social--youtube" href="https://youtube.com/@andromedaesports-n5z1w" target="_blank" rel="noopener noreferrer" aria-label="Andromeda on YouTube">
+          <span>YouTube</span>
+        </a>
+        <a class="social social--tiktok" href="https://www.tiktok.com/@andromeda.esports7" target="_blank" rel="noopener noreferrer" aria-label="Andromeda on TikTok">
+          <span>TikTok</span>
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom container">
+      <small>&copy; Andromeda Esports</small>
+    </div>
+  </footer>
+
+  <script type="module" src="/js/site-navigation.js"></script>
+  <script type="module" src="/js/pages/staff-dashboard-nav.js"></script>
+  <script type="module" src="/js/pages/teams-overview.js"></script>
+  <script type="module" src="/js/pages/site-analytics.js"></script>
+  <script src="/js/animations.js" defer></script>
+  <script src="/js/ambient-background.js" defer></script>
+
+</body>
+</html>
