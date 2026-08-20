@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Andromeda Admin Audit Logs</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell" data-admin-permissions="auditLogs:read">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Andromeda Admin</h1>
+          <p class="admin-brand__subtitle">Audit Log Viewer</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
+        <a href="admin.html" class="admin-btn admin-btn--secondary">Rosters + Trials</a>
+        <span class="admin-role-badge" data-admin-role>—</span>
+        <span>Signed in as <strong data-admin-email>—</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section class="admin-card" aria-labelledby="audit-filters-heading">
+      <h2 id="audit-filters-heading">Filters</h2>
+      <p class="admin-page-purpose">Use filters to review who changed admin-managed data and when the change happened.</p>
+      <div class="admin-grid admin-grid--three">
+        <div>
+          <label class="admin-label" for="audit-team-filter">Team</label>
+          <select id="audit-team-filter" class="admin-select">
+            <option value="">All teams</option>
+            <option value="horizon">Horizon</option>
+            <option value="spiral">Spiral</option>
+            <option value="proxima">Proxima</option>
+            <option value="comet">Comet</option>
+            <option value="supernova">Supernova</option>
+            <option value="void">Void</option>
+            <option value="polaris">Polaris</option>
+            <option value="octantis">Octantis</option>
+          </select>
+        </div>
+        <div>
+          <label class="admin-label" for="audit-action-filter">Action</label>
+          <select id="audit-action-filter" class="admin-select">
+            <option value="">All actions</option>
+            <option value="roster_update">roster_update</option>
+            <option value="roster_verify">roster_verify</option>
+            <option value="trial_create">trial_create</option>
+            <option value="trial_update">trial_update</option>
+            <option value="trial_status_change">trial_status_change</option>
+            <option value="trial_approve_to_roster">trial_approve_to_roster</option>
+          </select>
+        </div>
+        <div>
+          <label class="admin-label" for="audit-limit-filter">Max rows</label>
+          <select id="audit-limit-filter" class="admin-select">
+            <option value="100">100</option>
+            <option value="250" selected>250</option>
+            <option value="500">500</option>
+          </select>
+        </div>
+      </div>
+      <div class="admin-grid admin-grid--two" style="margin-top: 10px;">
+        <div>
+          <label class="admin-label" for="audit-start-date">Start date</label>
+          <input id="audit-start-date" class="admin-input" type="date">
+        </div>
+        <div>
+          <label class="admin-label" for="audit-end-date">End date</label>
+          <input id="audit-end-date" class="admin-input" type="date">
+        </div>
+      </div>
+      <div class="admin-inline-actions" style="margin-top: 12px;">
+        <button id="audit-apply-btn" class="admin-btn admin-btn--primary" type="button">Apply Filters</button>
+        <button id="audit-clear-btn" class="admin-btn admin-btn--secondary" type="button">Clear</button>
+      </div>
+    </section>
+
+    <section class="admin-card" aria-labelledby="audit-results-heading">
+      <h2 id="audit-results-heading">Results</h2>
+      <p id="audit-status" class="admin-status admin-text-muted" role="status" aria-live="polite">Sign in to load audit logs.</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Action</th>
+              <th>Resource</th>
+              <th>Team</th>
+              <th>Actor</th>
+              <th>Summary</th>
+            </tr>
+          </thead>
+          <tbody id="audit-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="js/audit-logs.js"></script>
+</body>
+</html>

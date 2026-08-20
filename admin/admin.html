@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Andromeda Admin Rosters and Trials</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell admin-team-view" data-admin-permissions="rosters:write,trials:write">
+    <header class="admin-topbar admin-topbar--team">
+      <div class="admin-brand admin-team-brand">
+        <img id="team-workspace-logo" class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div class="admin-team-brand__copy">
+          <h1 id="team-workspace-title" class="admin-brand__title">Andromeda Admin</h1>
+          <p id="team-workspace-subtitle" class="admin-brand__subtitle">Rosters and Trials</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <a href="index.html" class="admin-btn admin-btn--secondary">Dashboard</a>
+        <a href="audit-logs.html" class="admin-btn admin-btn--secondary" data-admin-permissions-visible="auditLogs:read">Audit Logs</a>
+        <a href="tournaments.html" class="admin-btn admin-btn--secondary" data-admin-permissions-visible="tournaments:write">Competition Hub</a>
+        <a href="calendar.html" class="admin-btn admin-btn--secondary">Match Calendar</a>
+        <span class="admin-role-badge" data-admin-role>—</span>
+        <span>Signed in as <strong data-admin-email>—</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section class="admin-editor-workflow">
+      <div class="admin-grid admin-grid--two">
+        <article class="admin-card admin-team-panel" aria-labelledby="roster-heading">
+        <h2 id="roster-heading">Edit Team Roster</h2>
+        <p class="admin-page-purpose">Update public roster cards and team profile data. Select a team first, review detected changes, then confirm the save.</p>
+        <p class="admin-public-impact">Public impact: saved roster and team profile changes update public team pages.</p>
+
+        <div>
+          <label class="admin-label" for="team-select">Select Team</label>
+          <select id="team-select" class="admin-select">
+            <option value="">Select a team</option>
+            <option value="horizon">Horizon</option>
+            <option value="spiral">Spiral</option>
+            <option value="proxima">Proxima</option>
+            <option value="comet">Comet</option>
+            <option value="supernova">Supernova</option>
+            <option value="void">Void</option>
+            <option value="polaris">Polaris</option>
+            <option value="octantis">Octantis</option>
+          </select>
+        </div>
+
+        <p id="roster-message" class="admin-status admin-text-muted" role="status" aria-live="polite"></p>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Roles</th>
+                <th>Lineup</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="roster-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="admin-grid" style="margin-top: 14px;">
+          <div>
+            <label class="admin-label" for="player-name">Player Name</label>
+            <input id="player-name" class="admin-input" type="text" placeholder="Enter player name">
+          </div>
+
+          <div>
+            <label class="admin-label" for="player-lineup">Lineup</label>
+            <select id="player-lineup" class="admin-select">
+              <option value="starter">Starter</option>
+              <option value="sub">Sub</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="admin-label" for="player-status">Status</label>
+            <select id="player-status" class="admin-select">
+              <option value="">Unset</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="trial">Trial</option>
+            </select>
+          </div>
+
+          <fieldset class="admin-fieldset"></fieldset>
+
+          <div class="admin-inline-actions">
+            <button id="add-player-btn" class="admin-btn admin-btn--secondary" type="button">Add Player</button>
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 18px 0;">
+
+        <h3>Team Profile Data</h3>
+        <p class="admin-text-muted">These values power the Teams quick overview and team profile pages.</p>
+
+        <div class="admin-grid admin-grid--two">
+          <div>
+            <label class="admin-label" for="team-display-name">Display Name</label>
+            <input id="team-display-name" class="admin-input" type="text" placeholder="Horizon">
+          </div>
+          <div>
+            <label class="admin-label" for="team-tier">Tier</label>
+            <input id="team-tier" class="admin-input" type="text" placeholder="T1 / FACEIT">
+          </div>
+          <div>
+            <label class="admin-label" for="team-region">Region</label>
+            <input id="team-region" class="admin-input" type="text" placeholder="NA">
+          </div>
+          <div>
+            <label class="admin-label" for="team-rating">Rating</label>
+            <input id="team-rating" class="admin-input" type="text" placeholder="FACEIT Masters">
+          </div>
+          <div>
+            <label class="admin-label" for="team-manager">Manager</label>
+            <input id="team-manager" class="admin-input" type="text" placeholder="Manager name">
+          </div>
+          <div>
+            <label class="admin-label" for="team-coaches">Coaches</label>
+            <input id="team-coaches" class="admin-input" type="text" placeholder="Coach names">
+          </div>
+          <div>
+            <label class="admin-label" for="team-captain">Captain</label>
+            <input id="team-captain" class="admin-input" type="text" placeholder="Captain name">
+          </div>
+        </div>
+
+        <div class="admin-grid" style="margin-top: 10px;">
+          <div>
+            <label class="admin-label" for="team-description">Description</label>
+            <textarea id="team-description" class="admin-textarea" rows="3" placeholder="Short team summary"></textarea>
+          </div>
+          <div>
+            <label class="admin-label" for="team-highlights">Highlights (one per line)</label>
+            <textarea id="team-highlights" class="admin-textarea" rows="3" placeholder="Communication habits"></textarea>
+          </div>
+          <div>
+            <label class="admin-label" for="team-achievements">Achievements (one per line)</label>
+            <textarea id="team-achievements" class="admin-textarea" rows="3" placeholder="FACEIT S5 Advanced Champions"></textarea>
+          </div>
+        </div>
+        </article>
+
+        <article class="admin-card admin-team-panel" aria-labelledby="trials-heading">
+        <h2 id="trials-heading">Trials Queue</h2>
+        <p class="admin-page-purpose">Review trial players, filter the queue, and approve only the players that should be added to a roster.</p>
+        <p class="admin-public-impact">Public impact: approving a trial can add that player to the selected public roster.</p>
+
+        <div class="admin-trials-toolbar">
+          <div>
+            <label class="admin-label" for="trials-team-filter">Team</label>
+            <select id="trials-team-filter" class="admin-select">
+              <option value="">All</option>
+              <option value="horizon">Horizon</option>
+              <option value="spiral">Spiral</option>
+              <option value="proxima">Proxima</option>
+              <option value="comet">Comet</option>
+              <option value="supernova">Supernova</option>
+              <option value="void">Void</option>
+              <option value="polaris">Polaris</option>
+              <option value="octantis">Octantis</option>
+            </select>
+          </div>
+          <div>
+            <span id="trials-view-label" class="admin-label">View</span>
+            <div class="admin-trials-tabs" role="tablist" aria-labelledby="trials-view-label">
+              <button class="admin-trials-tab is-active" type="button" role="tab" aria-selected="true" data-trials-view="pending">
+                Pending <span data-trials-count="pending">0</span>
+              </button>
+              <button class="admin-trials-tab" type="button" role="tab" aria-selected="false" data-trials-view="history">
+                History <span data-trials-count="history">0</span>
+              </button>
+              <button class="admin-trials-tab" type="button" role="tab" aria-selected="false" data-trials-view="all">
+                All <span data-trials-count="all">0</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-trials-controls">
+          <div id="trials-history-filter-wrap" hidden>
+            <label class="admin-label" for="trials-history-status-filter">History status</label>
+            <select id="trials-history-status-filter" class="admin-select">
+              <option value="">All closed trials</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="dropped">Dropped</option>
+            </select>
+          </div>
+          <button id="refresh-trials-btn" class="admin-btn admin-btn--secondary" type="button">Refresh</button>
+        </div>
+
+        <p id="trials-message" class="admin-status admin-text-muted" role="status" aria-live="polite"></p>
+        <div id="trials-list" class="admin-grid"></div>
+
+        <details class="admin-trial-create">
+          <summary>Add a trial</summary>
+          <div class="admin-grid admin-trial-create__form">
+            <div>
+              <label class="admin-label" for="trial-name">Name</label>
+              <input id="trial-name" class="admin-input" type="text" placeholder="Trial name">
+            </div>
+
+            <div>
+              <label class="admin-label" for="trial-team">Team</label>
+              <select id="trial-team" class="admin-select">
+                <option value="">Select team</option>
+                <option value="horizon">Horizon</option>
+                <option value="spiral">Spiral</option>
+                <option value="proxima">Proxima</option>
+                <option value="comet">Comet</option>
+                <option value="supernova">Supernova</option>
+                <option value="void">Void</option>
+                <option value="polaris">Polaris</option>
+                <option value="octantis">Octantis</option>
+              </select>
+            </div>
+
+            <fieldset class="admin-fieldset">
+              <legend>Roles</legend>
+              <label><input type="checkbox" name="trial-roles" value="TANK"> Tank</label>
+              <label><input type="checkbox" name="trial-roles" value="DPS"> DPS</label>
+              <label><input type="checkbox" name="trial-roles" value="SUPPORT"> Support</label>
+              <label><input type="checkbox" name="trial-roles" value="STAFF"> Staff</label>
+            </fieldset>
+
+            <div>
+              <label class="admin-label" for="trial-notes">Notes</label>
+              <textarea id="trial-notes" class="admin-textarea" rows="3" placeholder="Notes"></textarea>
+            </div>
+
+            <div class="admin-inline-actions">
+              <button id="add-trial-btn" class="admin-btn admin-btn--primary" type="button">Add Trial</button>
+            </div>
+          </div>
+        </details>
+        </article>
+      </div>
+
+      <section class="admin-save-bar" aria-label="Save roster and team profile changes">
+        <div class="admin-save-bar__copy">
+          <strong id="roster-save-state" class="admin-save-state" data-state="idle" role="status" aria-live="polite">Select a team to edit.</strong>
+          <span>Save roster and team profile edits before verification.</span>
+        </div>
+        <button id="save-roster-btn" class="admin-btn admin-btn--primary" type="button" disabled>Save Changes</button>
+      </section>
+    </section>
+
+    <section id="roster-verification" class="admin-card admin-verification-panel" aria-labelledby="roster-verification-heading">
+      <div class="admin-verification-panel__heading">
+        <span class="admin-verification-panel__step">Final step</span>
+        <h2 id="roster-verification-heading">Roster Verification</h2>
+      </div>
+      <div class="admin-verification-panel__content">
+        <div>
+          <p id="roster-verification-status" class="admin-verification-status">Verification status will appear after loading a team.</p>
+          <p id="roster-verification-guidance" class="admin-text-muted">Select a team to review its verification status.</p>
+        </div>
+        <button id="verify-roster-btn" class="admin-btn admin-btn--secondary" type="button" disabled>Verify Roster</button>
+      </div>
+    </section>
+
+    <section id="roster-diff-modal" class="admin-modal" hidden aria-labelledby="roster-diff-title" role="dialog" aria-modal="true">
+      <div class="admin-modal__panel">
+        <h2 id="roster-diff-title">Review Changes</h2>
+        <p class="admin-text-muted">Review the detected roster and team profile changes before saving.</p>
+        <div id="roster-diff-content" class="admin-diff-preview"></div>
+        <p id="roster-save-modal-message" class="admin-status admin-text-muted" role="status" aria-live="polite"></p>
+        <div class="admin-inline-actions">
+          <button id="cancel-roster-save-btn" type="button" class="admin-btn admin-btn--secondary">Cancel</button>
+          <button id="confirm-roster-save-btn" type="button" class="admin-btn admin-btn--primary">Confirm Save</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

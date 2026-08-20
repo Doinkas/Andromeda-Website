@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Andromeda Admin Setup</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main class="admin-shell">
+    <section class="admin-card" style="max-width: 600px;">
+      <h1>Admin Allowlist Setup</h1>
+      <p>This tool initializes the admin allowlist in Firestore. Run this once during setup.</p>
+
+      <div class="admin-inline-actions" style="margin-bottom: 16px;">
+        <button id="sign-in-btn" class="admin-btn admin-btn--primary" type="button">Sign in with Google</button>
+        <button id="sign-out-btn" class="admin-btn admin-btn--secondary" type="button" style="display:none;">Sign out</button>
+      </div>
+
+      <div id="auth-status" class="admin-text-muted" style="margin-bottom: 16px;">Not signed in</div>
+
+      <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 18px 0;">
+
+      <h2>Add Admin Email</h2>
+      <div class="admin-grid">
+        <div>
+          <label class="admin-label" for="email-input">Email Address</label>
+          <input class="admin-input" id="email-input" type="email" placeholder="admin@example.com">
+        </div>
+        <button id="add-btn" class="admin-btn admin-btn--primary" type="button" disabled>Add to Allowlist</button>
+      </div>
+
+      <p id="add-status" class="admin-status admin-text-muted" style="margin-top: 10px;"></p>
+
+      <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 18px 0;">
+
+      <h2>Current Allowlist</h2>
+      <div id="allowlist-container" class="admin-grid"></div>
+      <p id="list-status" class="admin-status admin-text-muted">Sign in to view allowlist.</p>
+
+      <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 18px 0;">
+
+      <h2>Initial Setup</h2>
+      <p>If you need to seed the allowlist with the original admin emails, paste them below and click "Seed Initial Admins":</p>
+      <div>
+        <label class="admin-label" for="seed-emails">Emails (one per line)</label>
+        <textarea class="admin-textarea" id="seed-emails" rows="3" placeholder="admin@example.com"></textarea>
+      </div>
+      <button id="seed-btn" class="admin-btn admin-btn--primary" type="button" disabled style="margin-top: 10px;">Seed Initial Admins</button>
+      <p id="seed-status" class="admin-status admin-text-muted" style="margin-top: 10px;"></p>
+    </section>
+  </main>
+
+  <script type="module" src="js/setup.js"></script>
+</body>
+</html>

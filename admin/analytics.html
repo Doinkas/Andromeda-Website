@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Andromeda Admin Analytics</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell" data-admin-permissions="analytics:read">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Analytics Dashboard</h1>
+          <p class="admin-brand__subtitle">Audience behavior and engagement</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <span class="admin-role-badge" data-admin-role>—</span>
+        <span>Signed in as <strong data-admin-email>—</strong></span>
+        <a class="admin-btn admin-btn--secondary" href="index.html">Back to Dashboard</a>
+      </div>
+    </header>
+
+    <section class="admin-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0;">Performance Snapshot</h2>
+          <p class="admin-page-purpose">Use this page to spot visitor behavior trends and check whether homepage, team, social, and contact links are being used.</p>
+          <p style="margin:0.4rem 0 0;opacity:0.85;">All-time totals for what visitors click, view, and interact with.</p>
+        </div>
+      </div>
+
+      <div class="admin-grid" style="margin-top:1rem;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));">
+        <article class="admin-card" style="margin:0;">
+          <p style="margin:0;opacity:0.8;">Total Events</p>
+          <p data-metric="totalEvents" style="margin:0.4rem 0 0;font-size:1.9rem;font-weight:700;">0</p>
+        </article>
+        <article class="admin-card" style="margin:0;">
+          <p style="margin:0;opacity:0.8;">Page Views</p>
+          <p data-metric="pageViews" style="margin:0.4rem 0 0;font-size:1.9rem;font-weight:700;">0</p>
+        </article>
+        <article class="admin-card" style="margin:0;">
+          <p style="margin:0;opacity:0.8;">Team Profile Views</p>
+          <p data-metric="teamViews" style="margin:0.4rem 0 0;font-size:1.9rem;font-weight:700;">0</p>
+        </article>
+        <article class="admin-card" style="margin:0;">
+          <p style="margin:0;opacity:0.8;">Social Clicks</p>
+          <p data-metric="socialClicks" style="margin:0.4rem 0 0;font-size:1.9rem;font-weight:700;">0</p>
+        </article>
+        <article class="admin-card" style="margin:0;">
+          <p style="margin:0;opacity:0.8;">Contact Intents</p>
+          <p data-metric="contactIntents" style="margin:0.4rem 0 0;font-size:1.9rem;font-weight:700;">0</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="admin-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <article class="admin-card" style="margin:0;">
+        <h3 style="margin-top:0;">Top Pages</h3>
+        <ol data-list="topPages" style="margin:0;padding-left:1.1rem;"></ol>
+      </article>
+      <article class="admin-card" style="margin:0;">
+        <h3 style="margin-top:0;">Top Team Profiles</h3>
+        <ol data-list="topTeams" style="margin:0;padding-left:1.1rem;"></ol>
+      </article>
+      <article class="admin-card" style="margin:0;">
+        <h3 style="margin-top:0;">Social Platforms</h3>
+        <ol data-list="socialPlatforms" style="margin:0;padding-left:1.1rem;"></ol>
+      </article>
+      <article class="admin-card" style="margin:0;">
+        <h3 style="margin-top:0;">Top Button Clicks</h3>
+        <ol data-list="topCtas" style="margin:0;padding-left:1.1rem;"></ol>
+      </article>
+    </section>
+
+    <section class="admin-card">
+      <h3 style="margin-top:0;">Recent Activity</h3>
+      <div style="overflow-x:auto;">
+        <table class="admin-table" style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="text-align:left;">Event</th>
+              <th style="text-align:left;">Page</th>
+              <th style="text-align:left;">Detail</th>
+            </tr>
+          </thead>
+          <tbody data-recent-events></tbody>
+        </table>
+      </div>
+      <p data-analytics-status style="margin:0.75rem 0 0;opacity:0.85;"></p>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="/admin/js/analytics.js"></script>
+</body>
+</html>

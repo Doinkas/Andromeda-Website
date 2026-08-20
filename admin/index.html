@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Andromeda Admin Dashboard</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <main id="adminApp" hidden class="admin-shell" data-admin-permissions="admin:access">
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/branding/andro-org.png" alt="Andromeda logo">
+        <div>
+          <h1 class="admin-brand__title">Andromeda Admin</h1>
+          <p class="admin-brand__subtitle">Control center</p>
+        </div>
+      </div>
+      <div class="admin-user">
+        <span class="admin-role-badge" data-admin-role>-</span>
+        <span>Signed in as <strong data-admin-email>-</strong></span>
+        <button type="button" class="admin-btn admin-btn--secondary" data-admin-signout>Sign out</button>
+      </div>
+    </header>
+
+    <section id="needs-review-section" hidden class="admin-card admin-review-section" data-admin-visible="superadmin,owner,admin" aria-labelledby="needs-review-heading">
+      <div class="admin-review-section__header">
+        <div>
+          <h2 id="needs-review-heading">Needs Review</h2>
+          <p class="admin-page-purpose">Rosters awaiting verification and pending trials that need a decision.</p>
+        </div>
+        <span class="admin-review-total" aria-label="Total items needing review"><span id="needs-review-total">0</span></span>
+      </div>
+
+      <div class="admin-review-counts" aria-label="Review counts">
+        <span>Rosters needing verification: <strong id="needs-review-roster-count">0</strong></span>
+        <span>Trials awaiting review: <strong id="needs-review-trial-count">0</strong></span>
+      </div>
+
+      <p id="needs-review-status" class="admin-status admin-text-muted" role="status" aria-live="polite">Loading review items...</p>
+
+      <div class="admin-review-columns">
+        <section class="admin-review-queue" aria-labelledby="needs-review-rosters-heading">
+          <h3 id="needs-review-rosters-heading">Rosters</h3>
+          <div id="needs-review-rosters" class="admin-review-list"></div>
+        </section>
+        <section class="admin-review-queue" aria-labelledby="needs-review-trials-heading">
+          <h3 id="needs-review-trials-heading">Trials</h3>
+          <div id="needs-review-trials" class="admin-review-list"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>Dashboard</h2>
+      <p class="admin-page-purpose">Start here to reach the admin tools your role can use. Cards that do not apply to your role are hidden automatically.</p>
+      <p>Use the tools below to manage teams, matches, and admin maintenance workflows.</p>
+
+      <div class="admin-dashboard-section">
+        <h3 class="admin-dashboard-section__heading">Match Ops</h3>
+        <div class="admin-grid admin-grid--cards">
+          <a class="admin-link-card admin-link-card--primary" href="calendar.html" data-admin-permissions-visible="matches:read">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Match Calendar</span>
+              <span class="admin-link-card__access">Match ops</span>
+            </span>
+            <span class="admin-link-card__meta">Schedule, import, edit, and complete official matches from one workspace.</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="admin-dashboard-section">
+        <h3 class="admin-dashboard-section__heading">Team Ops</h3>
+        <div class="admin-grid admin-grid--cards">
+          <a class="admin-link-card" href="admin.html" data-admin-permissions-visible="rosters:write,trials:write">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Rosters + Trials</span>
+              <span class="admin-link-card__access">Team ops</span>
+            </span>
+            <span class="admin-link-card__meta">Edit public rosters, team profile data, and process the trial queue.</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="admin-dashboard-section">
+        <h3 class="admin-dashboard-section__heading">Public Content</h3>
+        <div class="admin-grid admin-grid--cards">
+          <a class="admin-link-card" href="media-hub.html" data-admin-permissions-visible="mediaHub:write">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Homepage Media Hub</span>
+              <span class="admin-link-card__access">Media desk</span>
+            </span>
+            <span class="admin-link-card__meta">Edit carousel tabs, headlines, bullet points, and links shown on the homepage.</span>
+          </a>
+          <a class="admin-link-card" href="tournaments.html" data-admin-permissions-visible="tournaments:write">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Competition Hub</span>
+              <span class="admin-link-card__access">Admin only</span>
+            </span>
+            <span class="admin-link-card__meta">Create, edit, publish, and remove competition records.</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="admin-dashboard-section">
+        <h3 class="admin-dashboard-section__heading">Review</h3>
+        <div class="admin-grid admin-grid--cards">
+          <a class="admin-link-card" href="analytics.html" data-admin-permissions-visible="analytics:read">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Site Analytics</span>
+              <span class="admin-link-card__access">Performance</span>
+            </span>
+            <span class="admin-link-card__meta">View page views, team profile views, social clicks, contact intent, and recent activity.</span>
+          </a>
+          <a class="admin-link-card" href="audit-logs.html" data-admin-permissions-visible="auditLogs:read">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Audit Log Viewer</span>
+              <span class="admin-link-card__access">Admin only</span>
+            </span>
+            <span class="admin-link-card__meta">Review backend and admin changes with filters by action, team, and date.</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="admin-dashboard-section" data-admin-permissions-visible="staff:invite">
+        <h3 class="admin-dashboard-section__heading">Access</h3>
+        <div class="admin-grid admin-grid--cards">
+          <a class="admin-link-card" href="staff.html">
+            <span class="admin-link-card__topline">
+              <span class="admin-link-card__title">Staff Access</span>
+              <span class="admin-link-card__access">Super Admin / Owner</span>
+            </span>
+            <span class="admin-link-card__meta">Invite staff by email and manage active access without changing source code.</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>How To Use Admin</h2>
+      <div class="admin-grid admin-grid--two">
+        <div class="admin-help-block" style="margin:0;">
+          <h3 class="admin-help-block__title">Daily Workflow</h3>
+          <ol class="admin-help-block__list">
+            <li>Check <strong>Site Analytics</strong> to see what visitors are clicking.</li>
+            <li>Use <strong>Homepage Media Hub</strong> to update homepage messaging.</li>
+            <li>Use <strong>Rosters + Trials</strong> and <strong>Match Calendar</strong> to keep team data current.</li>
+          </ol>
+        </div>
+        <div class="admin-help-block" style="margin:0;">
+          <h3 class="admin-help-block__title">Before You Save</h3>
+          <ul class="admin-help-block__list">
+            <li>Keep headlines short and easy to scan.</li>
+            <li>Use clear button text (example: Join Discord, View Schedule).</li>
+            <li>After saving, refresh the public page to confirm updates.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin/admin-gate.ui.js"></script>
+  <script type="module" src="js/dashboard-review.js"></script>
+</body>
+</html>
